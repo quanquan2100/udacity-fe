@@ -25,11 +25,11 @@ var Engine = (function(global) {
   canvas.height = 606;
   doc.body.appendChild(canvas);
 
-    ctx.lineWidth = 3;
-    ctx.textAlign = "center";
-    ctx.strokeStyle = "black";
-    ctx.font = " 70px Impact"
-  /* 这个函数是整个游戏的主入口，负责适当的调用 update / render 函数 */
+  ctx.lineWidth = 3;
+  ctx.textAlign = "center";
+  ctx.strokeStyle = "black";
+  ctx.font = " 70px Impact"
+    /* 这个函数是整个游戏的主入口，负责适当的调用 update / render 函数 */
   function main() {
     /* 如果你想要更平滑的动画过度就需要获取时间间隙。因为每个人的电脑处理指令的
      * 速度是不一样的，我们需要一个对每个人都一样的常数（而不管他们的电脑有多快）
@@ -72,7 +72,7 @@ var Engine = (function(global) {
   function update(dt) {
     // 更新各个游戏实体
     updateEntities(dt);
-    
+
     // 碰撞检测
     checkCollisions();
   }
@@ -82,7 +82,7 @@ var Engine = (function(global) {
    * 比如你的角色死的时候），你可能需要在这里调用一个额外的函数。现在我们已经把这里
    * 注释了，你可以在这里实现，也可以在 app.js 对应的角色类里面实现。
    */
-  function checkCollisions () {
+  function checkCollisions() {
     var dx;
     // 如果玩家死亡则不进行碰撞检测
     // if (player.state === 0) {
@@ -188,7 +188,11 @@ var Engine = (function(global) {
     'images/char-pink-girl.png',
     'images/char-horn-girl.png',
     'images/char-princess-girl.png',
-    'images/Selector.png'
+    'images/Selector.png',
+    "sounds/anniu-kehuan1.mp3",
+    "sounds/Generic-Click-Digital-12.mp3",
+    "sounds/anniu-katong7.mp3",
+    "sounds/anniu-shitou2.mp3"
   ]);
   Resources.onReady(init);
 

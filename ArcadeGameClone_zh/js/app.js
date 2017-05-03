@@ -14,12 +14,6 @@ var GAME_SETTING = 0,
 var LEVEL_EASY = 0,
   LEVEL_HARD = 1;
 
-var audio = {
-  "images/anniu-kehuan1.mp3":  new Audio("images/anniu-kehuan1.mp3"),
-  "images/Generic-Click-Digital-12.mp3":  new Audio("images/Generic-Click-Digital-12.mp3"),
-  "images/anniu-katong7.mp3":  new Audio("images/anniu-katong7.mp3"),
-  "images/anniu-shitou2.mp3":  new Audio("images/anniu-shitou2.mp3")
-}
 var game = (function() {
   var readyTime = null;
   var player = undefined,
@@ -60,7 +54,7 @@ var game = (function() {
   }
 
   function loop(fuc, time) {
-    if (game.state !== 1) {
+    if (game.state !== GAME_READY && game.state !== GAME_BEGIN) {
       return;
     }
     var rand = Math.round(Math.random() * (time - 500)) + 500;
@@ -105,16 +99,21 @@ var game = (function() {
       }
     }
 
+    // 渲染游戏对象 player enemy
     renderEntities();
+
+    // 根据游戏状态渲染不同界面
     switch (this.state) {
       case GAME_SETTING:
         ctx.fillStyle = "#f7d74c";
         ctx.fillText("CHOOSE ROLE", 252, 200);
         ctx.strokeText("CHOOSE ROLE", 252, 200);
         for (var i = (role.length - 1); i >= 0; i--) {
+          // 标识当前选中 role
           if (this.role === role[i].name) {
             ctx.drawImage(Resources.get("images/Selector.png"), role[i].x, role[i].y - 40);
           }
+          // 绘制可选人物
           ctx.drawImage(Resources.get(role[i].name), role[i].x, role[i].y);
         }
         break;
@@ -245,7 +244,7 @@ var game = (function() {
       return allEnemies;
     },
     start: function () {
-      audio["images/Generic-Click-Digital-12.mp3"].play();
+      Resources.get("sounds/Generic-Click-Digital-12.mp3").play();
       this.state = GAME_READY;
       readyTime = 3999;
       // 现在实例化你的所有对象
@@ -281,12 +280,12 @@ var game = (function() {
         case "left":
           active = (active === 0) ? 0 : (active - 1);
           this.role = role[active].name;
-          audio["images/anniu-kehuan1.mp3"].play();
+          Resources.get("sounds/anniu-kehuan1.mp3").play();
           break;
         case "right":
           active = (active === (role.length - 1)) ? (role.length - 1) : (active + 1);
           this.role = role[active].name;
-          audio["images/anniu-kehuan1.mp3"].play();
+          Resources.get("sounds/anniu-kehuan1.mp3").play();
           break;
         case "enter":
           this.start();
@@ -381,11 +380,11 @@ Player.prototype.handleInput = function(key) {
   }
   if (newX < 0 || newX > MAXX || newY < 0 || newY > MAXY) {
     // TODO: 超出边界声音效果
-    audio["images/anniu-shitou2.mp3"].play();
+    Resources.get("sounds/anniu-shitou2.mp3").play();
   } else {
     this.x = newX;
     this.y = newY;
-    audio["images/anniu-katong7.mp3"].play();
+    Resources.get("sounds/anniu-katong7.mp3").play();
   }
   // TODO: 移动声音效果
 };

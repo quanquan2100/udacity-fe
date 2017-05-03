@@ -35,24 +35,45 @@
     } else {
       /* 否则， 这个 URL 之前没被加载过而且在缓存里面不存在，那么我们得加载这张图片
        */
-      var img = new Image();
-      img.onload = function() {
-        /* 一旦我们的图片已经被加载了，就把它放进我们的缓存，然后我们在开发者试图
-         * 在未来再次加载这个图片的时候我们就可以简单的返回即可。
-         */
-        resourceCache[url] = img;
-        /* 一旦我们的图片已经被加载和缓存，调用所有我们已经定义的回调函数。
-         */
-        if (isReady()) {
-          readyCallbacks.forEach(function(func) { func(); });
-        }
-      };
+      var type = url.split('.').pop();
+      if (type === "png") {
+        var img = new Image();
+        img.onload = function() {
+          /* 一旦我们的图片已经被加载了，就把它放进我们的缓存，然后我们在开发者试图
+           * 在未来再次加载这个图片的时候我们就可以简单的返回即可。
+           */
+          resourceCache[url] = img;
+          /* 一旦我们的图片已经被加载和缓存，调用所有我们已经定义的回调函数。
+           */
+          if (isReady()) {
+            readyCallbacks.forEach(function(func) { func(); });
+          }
+        };
 
-      /* 将一开始的缓存值设置成 false 。在图片的 onload 事件回调被调用的时候会
-       * 改变这个值。最后，将图片的 src 属性值设置成传进来的 URl 。
-       */
-      resourceCache[url] = false;
-      img.src = url;
+        /* 将一开始的缓存值设置成 false 。在图片的 onload 事件回调被调用的时候会
+         * 改变这个值。最后，将图片的 src 属性值设置成传进来的 URl 。
+         */
+        resourceCache[url] = false;
+        img.src = url;
+      } else if (type === "mp3") {
+        var audio = new Audio();
+        audio.preload = "auto";
+        // once this file loads, it will call loadedAudio()
+        // the file will be kept by the browser as cache
+        audio.addEventListener('loadeddata', function() {
+          /* 一旦我们的音频已经被加载了，就把它放进我们的缓存，然后我们在开发者试图
+           * 在未来再次加载这个音频的时候我们就可以简单的返回即可。
+           */
+          resourceCache[url] = audio;
+          /* 一旦我们的音频已经被加载和缓存，调用所有我们已经定义的回调函数。
+           */
+          if (isReady()) {
+            readyCallbacks.forEach(function(func) { func(); });
+          }
+        }, false);
+        resourceCache[url] = false;
+        audio.src = url;
+      }
     }
   }
 

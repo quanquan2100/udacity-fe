@@ -14,6 +14,12 @@ var GAME_SETTING = 0,
 var LEVEL_EASY = 0,
   LEVEL_HARD = 1;
 
+var audio = {
+  "images/anniu-kehuan1.mp3":  new Audio("images/anniu-kehuan1.mp3"),
+  "images/Generic-Click-Digital-12.mp3":  new Audio("images/Generic-Click-Digital-12.mp3"),
+  "images/anniu-katong7.mp3":  new Audio("images/anniu-katong7.mp3"),
+  "images/anniu-shitou2.mp3":  new Audio("images/anniu-shitou2.mp3")
+}
 var game = (function() {
   var readyTime = null;
   var player = undefined,
@@ -239,6 +245,7 @@ var game = (function() {
       return allEnemies;
     },
     start: function () {
+      audio["images/Generic-Click-Digital-12.mp3"].play();
       this.state = GAME_READY;
       readyTime = 3999;
       // 现在实例化你的所有对象
@@ -274,10 +281,12 @@ var game = (function() {
         case "left":
           active = (active === 0) ? 0 : (active - 1);
           this.role = role[active].name;
+          audio["images/anniu-kehuan1.mp3"].play();
           break;
         case "right":
           active = (active === (role.length - 1)) ? (role.length - 1) : (active + 1);
           this.role = role[active].name;
+          audio["images/anniu-kehuan1.mp3"].play();
           break;
         case "enter":
           this.start();
@@ -372,10 +381,11 @@ Player.prototype.handleInput = function(key) {
   }
   if (newX < 0 || newX > MAXX || newY < 0 || newY > MAXY) {
     // TODO: 超出边界声音效果
-    console.log("超出边界");
+    audio["images/anniu-shitou2.mp3"].play();
   } else {
     this.x = newX;
     this.y = newY;
+    audio["images/anniu-katong7.mp3"].play();
   }
   // TODO: 移动声音效果
 };

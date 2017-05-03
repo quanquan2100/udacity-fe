@@ -4,10 +4,41 @@ var MAXX = 4 * COL,
   MAXY = 5 * ROW,
   MINX = 0,
   MINY = 0;
+// 游戏状态
+var GAME_SETTING = 0,
+  GAME_READY = 1,
+  GAME_WIN = 3,
+  GAME_BEGIN = 2,
+  GAME_FAIL = 4;
+// 游戏难度
+var LEVEL_EASY = 0,
+  LEVEL_HARD = 1;
 
 var game = (function() {
+  var readyTime = null;
   var player = undefined,
     allEnemies = [];
+  var role = [{
+    name: "images/char-cat-girl.png",
+    x: 0 * 101,
+    y: 3 * 83
+  }, {
+    name: "images/char-pink-girl.png",
+    x: 1 * 101,
+    y: 3 * 83
+  }, {
+    name: "images/char-boy.png",
+    x: 2 * 101,
+    y: 3 * 83
+  }, {
+    name: "images/char-horn-girl.png",
+    x: 3 * 101,
+    y: 3 * 83
+  }, {
+    name: "images/char-princess-girl.png",
+    x: 4 * 101,
+    y: 3 * 83
+  }];
 
   function creatEnemy() {
     allEnemies.push(new Enemy());
@@ -69,6 +100,42 @@ var game = (function() {
     }
 
     renderEntities();
+    switch (this.state) {
+      case GAME_SETTING:
+        ctx.fillStyle = "#f7d74c";
+        ctx.fillText("CHOOSE ROLE", 252, 200);
+        ctx.strokeText("CHOOSE ROLE", 252, 200);
+        for (var i = (role.length - 1); i >= 0; i--) {
+          if (this.role === role[i].name) {
+            ctx.drawImage(Resources.get("images/Selector.png"), role[i].x, role[i].y - 40);
+          }
+          ctx.drawImage(Resources.get(role[i].name), role[i].x, role[i].y);
+        }
+        break;
+      case GAME_BEGIN:
+        break;
+      case GAME_WIN:
+        ctx.fillStyle = "#f7d74c";
+        ctx.fillText("YOU WIN!", 252, 200);
+        ctx.strokeText("YOU WIN!", 252, 200);
+        break;
+      case GAME_FAIL:
+        ctx.fillStyle = "#f7d74c";
+        ctx.fillText("YOU FAIL!", 252, 200);
+        ctx.strokeText("YOU FAIL!", 252, 200);
+        break;
+      case GAME_READY:
+        ctx.fillStyle = "#f7d74c";
+        ctx.fillText("READY", 252, 200);
+        ctx.strokeText("READY", 252, 200);
+        var time = Math.floor(readyTime / 1000);
+        ctx.fillText(time, 252, 300);
+        ctx.strokeText(time, 252, 300);
+        break;
+      default:
+        console.log("奇怪的游戏状态");
+    }
+
   }
 
   /* 这个函数会在每个时间间隙被 render 函数调用。他的目的是分别调用你在 enemy 和 player
@@ -90,11 +157,33 @@ var game = (function() {
    * 注释了，你可以在这里实现，也可以在 app.js 对应的角色类里面实现。
    */
   function update(dt) {
+    // 更新倒计时
+    if (this.state === GAME_READY) {
+      readyTime = readyTime - 1000 * dt;
+      if (readyTime < 20) {
+        this.state = GAME_BEGIN;
+        readyTime = null;
+      }
+    }
     // 更新各个游戏实体
     updateEntities(dt);
+    switch (this.state) {
+      case GAME_SETTING:
+        break;
+      case GAME_BEGIN:
+        // 碰撞检测
+        checkCollisions();
+        break;
+      case GAME_WIN:
+        break;
+      case GAME_FAIL:
+        break;
+      case GAME_READY:
+        break;
+      default:
+        console.log("奇怪的游戏状态");
+    }
 
-    // 碰撞检测
-    checkCollisions();
   }
 
   /* 这个函数被 update 函数调用，它本身调用所有的需要更新游戏角色
@@ -131,37 +220,71 @@ var game = (function() {
     });
     if (player) {
       player.update();
-      
+
     }
   }
 
   return {
-    state: 0,
-    level: 0,
+    state: GAME_SETTING,
+    level: LEVEL_EASY,
     role: "images/char-boy.png",
     getPlyer: function() {
-      return player;
+      if (player) {
+        return player;
+      } else {
+        return false;
+      }
     },
     getAllEnemies: function() {
       return allEnemies;
     },
-    begin: function() {
+    start: function () {
+      this.state = GAME_READY;
+      readyTime = 3999;
       // 现在实例化你的所有对象
       // 把所有敌人的对象都放进一个叫 allEnemies 的数组里面
       // 把玩家对象放进一个叫 player 的变量里面
-      this.state = 1;
       player = new Player(this.role);
       allEnemies = [];
       loop(function() {
-        clearEnemies();
-        creatEnemy();
+        clearEnemies(); // 清除废旧 enemy
+        creatEnemy(); // 创建新 enemy
       }, 5000);
     },
-    render: function() {
-      render();
+    fail: function() {
+      this.state = GAME_FAIL;
     },
-    update: function(dt) {
-      update(dt);
+    win: function() {
+      this.state = GAME_WIN;
+    },
+    setting: function() {
+      player = undefined;
+      game.state = GAME_SETTING;
+    },
+    render: render,
+    update: update,
+    changeSet: function(opt) {
+      var active;
+      for (var i = (role.length - 1); i >= 0; i--) {
+        if (this.role === role[i].name) {
+          active = i;
+        }
+      }
+      switch (opt) {
+        case "left":
+          active = (active === 0) ? 0 : (active - 1);
+          this.role = role[active].name;
+          break;
+        case "right":
+          active = (active === (role.length - 1)) ? (role.length - 1) : (active + 1);
+          this.role = role[active].name;
+          break;
+        case "enter":
+          this.start();
+          break;
+        default:
+          ;
+      }
     }
   };
 }());
@@ -213,6 +336,10 @@ var Player = function(role) {
 Player.prototype.update = function(dt) {
   // 你应该给每一次的移动都乘以 dt 参数，以此来保证游戏在所有的电脑上
   // 都是以同样的速度运行的
+  if (this.y === 0) {
+    this.state = 2;
+    game.win();
+  }
 };
 
 // 此为游戏必须的函数，用来在屏幕上画出玩家
@@ -222,6 +349,7 @@ Player.prototype.render = function() {
 
 Player.prototype.death = function() {
   this.state = 0;
+  game.fail();
 };
 
 // 此为游戏必须的函数，用来控制玩家移动
@@ -261,10 +389,33 @@ document.addEventListener('keyup', function(e) {
     37: 'left',
     38: 'up',
     39: 'right',
-    40: 'down'
+    40: 'down',
+    13: 'enter',
+    32: 'space'
   };
 
-  if (player) {
-    player.handleInput(allowedKeys[e.keyCode]);
+  switch (game.state) {
+    case GAME_SETTING:
+      game.changeSet(allowedKeys[e.keyCode]);
+      break;
+    case GAME_BEGIN:
+      if (game.getPlyer()) {
+        game.getPlyer().handleInput(allowedKeys[e.keyCode]);
+      }
+      break;
+    case GAME_WIN:
+      if (e.keyCode === 13) {
+        game.setting();
+      }
+      break;
+    case GAME_FAIL:
+      if (e.keyCode === 13) {
+        game.setting();
+      }
+      break;
+    case GAME_READY:
+      break;
+    default:
+      console.log("奇怪的游戏状态");
   }
 });

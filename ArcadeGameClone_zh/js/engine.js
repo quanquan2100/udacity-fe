@@ -25,7 +25,6 @@ var Engine = (function(global) {
   canvas.height = 606;
   doc.body.appendChild(canvas);
 
-  ctx.textAlign = "center";
   ctx.strokeStyle = "black";
     /* 这个函数是整个游戏的主入口，负责适当的调用 update / render 函数 */
   function main() {
@@ -67,7 +66,7 @@ var Engine = (function(global) {
   function reset() {
     // 空操作
     // 初始化 game 的原始配置
-    game.state = GAME_SETTING;
+    game.state = GAME_SETROLE;
     game.level = LEVEL_EASY;
     game.role = "images/char-boy.png";
   }
@@ -91,7 +90,12 @@ var Engine = (function(global) {
     "sounds/anniu-katong7.mp3",
     "sounds/anniu-shitou2.mp3",
     "sounds/success.mp3",
-    "sounds/fail.mp3"
+    "sounds/fail.mp3",
+    "images/Gem-Orange.png",
+    "images/Gem-Green.png",
+    "images/Gem-Blue.png",
+    "images/Heart.png",
+    "images/Rock.png"
   ]);
   Resources.onReady(init);
 

@@ -7,7 +7,7 @@ var MAXX = 4 * COL,
   MINY = 0;
 
 // 游戏状态常量
-var GAME_SETTING = 0,
+var GAME_SETROLE = 0,
   GAME_READY = 1,
   GAME_WIN = 3,
   GAME_BEGIN = 2,
@@ -20,7 +20,11 @@ var LEVEL_EASY = 0,
 var game = (function() {
   var readyTime = null;
   var player = undefined,
-    allEnemies = [];
+    allEnemies = [],
+    allRocks = [],
+    allGems = [],
+    allHearts = [],
+    allPos = [];
   var role = [{
     name: "images/char-cat-girl.png",
     x: 0 * 101,
@@ -60,7 +64,11 @@ var game = (function() {
     basicV: 70, // 敌人基础速度
     tV: 200,
     basicTime: 500, // 敌人生成的基础时间
-    tTime: 1000 // 敌人生成的基础时间
+    tTime: 1000, // 敌人生成的基础时间
+    gameTime: 20000, // 游戏时间
+    stoneNum: 1,
+    gemNum: 1,
+    heart: 1
   }, {
     rowImages: [ /* 这个数组保存着游戏关卡的特有的行对应的图片相对路径。 */
       'images/water-block.png', // 这一行是河。
@@ -76,7 +84,11 @@ var game = (function() {
     basicV: 120, // 敌人基础速度
     tV: 600,
     basicTime: 300, // 敌人生成的基础时间
-    tTime: 500 // 敌人生成的基础时间
+    tTime: 500, // 敌人生成的基础时间
+    gameTime: 15000, // 游戏时间
+    stoneNum: 3,
+    gemNum: 2,
+    heart: 1
   }];
 
   function clearEnemies() {
@@ -88,29 +100,43 @@ var game = (function() {
     allEnemies.splice(0, i);
   }
 
-  function loop(fuc, basicTime, tTime) {
-    if (game.state !== GAME_READY && game.state !== GAME_BEGIN) {
-      return;
+  function clearGems() {
+    for (var i = 0; i < allGems.length; i++) {
+      if (allGems[i].state !== 0) {
+        break;
+      }
     }
+    allGems.splice(0, i);
+  }
+
+  function loop(fuc, basicTime, tTime) {
+    // if (game.state !== GAME_READY && game.state !== GAME_BEGIN) {
+    //   return;
+    // }
     var rand = Math.floor(Math.random() * tTime) + basicTime;
     setTimeout(function() {
+      if (game.state !== GAME_READY && game.state !== GAME_BEGIN) {
+        return;
+      }
       fuc();
       loop(fuc, basicTime, tTime);
     }, rand);
   }
-
-  /* 这个函数做了一些游戏的初始渲染，然后调用 renderEntities 函数。记住，这个函数
-   * 在每个游戏的时间间隙都会被调用一次（或者说游戏引擎的每个循环），因为这就是游戏
-   * 怎么工作的，他们就像是那种每一页上都画着不同画儿的书，快速翻动的时候就会出现是
-   * 动画的幻觉，但是实际上，他们只是不停的在重绘整个屏幕。
-   */
-  function render() {}
 
   /* 这个函数会在每个时间间隙被 render 函数调用。他的目的是分别调用你在 enemy 和 player
    * 对象中定义的 render 方法。
    */
   function renderEntities() {
     /* 遍历在 allEnemies 数组中存放的作于对象然后调用你事先定义的 render 函数 */
+    allRocks.forEach(function(rock) {
+      rock.render();
+    });
+    allGems.forEach(function(gem) {
+      gem.render();
+    });
+    allHearts.forEach(function(heart) {
+      heart.render();
+    });
     allEnemies.forEach(function(enemy) {
       enemy.render();
     });
@@ -126,6 +152,21 @@ var game = (function() {
    */
   function checkCollisions() {
     var dx;
+    // 检测与额外生命的碰撞
+    for (var i = allHearts.length - 1; i >= 0; i--) {
+      if (allHearts[i].y === player.y && allHearts[i].x === player.x && allHearts[i].state !== 0) {
+        allHearts[i].gain();
+      }
+    }
+
+    // 检测与宝石的碰撞
+    for (var i = allGems.length - 1; i >= 0; i--) {
+      if (allGems[i].y === player.y && allGems[i].x === player.x && allGems[i].state !== 0) {
+        allGems[i].gain();
+      }
+    }
+
+    // 检测与敌人之间的碰撞
     for (var i = allEnemies.length - 1; i >= 0; i--) {
       if (allEnemies[i].state === 0 || allEnemies[i].y !== player.y) {
         continue;
@@ -145,6 +186,15 @@ var game = (function() {
     allEnemies.forEach(function(enemy) {
       enemy.update(dt);
     });
+    allRocks.forEach(function(rock) {
+      rock.update(dt);
+    });
+    allGems.forEach(function(gem) {
+      gem.update(dt);
+    });
+    allHearts.forEach(function(heart) {
+      heart.update(dt);
+    });
     if (player) {
       player.update();
     }
@@ -153,6 +203,8 @@ var game = (function() {
   /* 这个函数被 render 函数调用, 用于绘制界面上的大文字
    */
   function drawBigFont(text, x, y) {
+    ctx.strokeStyle = "black";
+    ctx.textAlign = "center";
     ctx.lineWidth = 3;
     ctx.fillStyle = "#f7d74c";
     ctx.font = " 70px Impact"
@@ -162,6 +214,8 @@ var game = (function() {
 
   // 这个函数被 render 函数调用, 用于绘制界面上的小文字
   function drawSmallFont(text, x, y) {
+    ctx.strokeStyle = "black";
+    ctx.textAlign = "center";
     ctx.lineWidth = 2;
     ctx.font = " 30px Impact"
     ctx.fillStyle = "#dadad0";
@@ -169,10 +223,62 @@ var game = (function() {
     ctx.strokeText(text, x, y);
   }
 
+  // 绘制游戏状态, 剩余时间, 剩余生命, 当前分数
+  function drawGameState(score, timePct, heart) {
+    ctx.strokeStyle = "black";
+    ctx.textAlign = "left";
+    ctx.lineWidth = 2;
+    ctx.fillStyle = "#f7d74c";
+    ctx.font = " 20px Impact"
+    ctx.fillText("score: " + score, 420, 575);
+    ctx.strokeText("score: " + score, 420, 575);
+    ctx.fillText("heart: " + heart, 20, 575);
+    ctx.strokeText("heart: " + heart, 20, 575);
+
+    // 绘制时间进度条
+    // 绘制底色
+    ctx.beginPath();
+    ctx.moveTo(0, 585);
+    ctx.lineTo(505, 585);
+    ctx.lineWidth = 5;
+    ctx.strokeStyle = "#666";
+    ctx.stroke();
+    // 绘制显示色
+    timePct = timePct > 1 ? 1 : timePct;
+    pos = 505 * (1 - timePct);
+    ctx.beginPath();
+    ctx.moveTo(pos, 585);
+    ctx.lineTo(505, 585);
+    ctx.lineWidth = 5;
+    ctx.strokeStyle = "#b73a0b";
+    ctx.stroke();
+  }
+
+
   return {
-    state: GAME_SETTING,
+    state: GAME_SETROLE,
     level: LEVEL_EASY,
     role: "images/char-boy.png",
+    score: 0,
+    timeLimit: 20000,
+    clearAllEntities: function() {
+      player = undefined;
+      allEnemies = [];
+      allPos = [];
+      allRocks = [];
+      allHearts = [];
+      allGems = [];
+    },
+    setLevel: function(levelVal) {
+      this.level = levelVal;
+      this.time = level[levelVal].gameTime;
+    },
+    setRole: function() {
+      this.clearAllEntities();
+      this.timeLimit = role[this.level].gameTime;
+      this.score = 0;
+      this.state = GAME_SETROLE;
+    },
     getPlyer: function() {
       if (player) {
         return player;
@@ -183,8 +289,32 @@ var game = (function() {
     getAllEnemies: function() {
       return allEnemies;
     },
+    getAllRocks: function() {
+      return allRocks;
+    },
+    getAllGems: function() {
+      return allGems;
+    },
+    getAllHearts: function() {
+      return allHearts;
+    },
+    getAvablePos: function() {
+      if (allPos.length === 0) {
+        return false;
+      }
+      var self = this;
+      var index = Math.floor(Math.random() * (allPos.length - 0.01));
+      var result = allPos[index];
+      // 生成的位置不可以是玩家的当前位置
+      if (result.x === player.x && result.y === player.y) {
+        return false;
+      } else {
+        allPos.splice(index, 1);
+        return result;
+      }
+    },
     creatEnemy: function() {
-      var row = (Math.floor(Math.random() * level[this.level].tRow) + 1) * ROW;
+      var row = (Math.floor(Math.random() * (level[this.level].tRow - 0.01)) + 1) * ROW;
       var v = Math.floor(Math.random() * level[this.level].tV) + level[this.level].basicV;
       allEnemies.push(new Enemy(row, (-1 * COL), v));
     },
@@ -202,6 +332,53 @@ var game = (function() {
       player = new Player(this.role);
 
       allEnemies = [];
+      allRocks = [];
+      allHearts = [];
+      allGems = [];
+
+      // 初始化可选位置列表
+      allPos = [];
+      for (var i = 4; i >= 0; i--) {
+        for (var j = level[self.level].tRow; j > 0; j--) {
+          allPos.push({
+            x: i * COL,
+            y: j * ROW
+          });
+        }
+      }
+      var pos;
+      // 创建石头, 一次创建一个
+      pos = self.getAvablePos();
+      if (pos) {
+        allRocks.push(new Rock(pos.x, pos.y));
+      }
+      loop(function() {
+        var pos = self.getAvablePos();
+        if (pos) {
+          allRocks.push(new Rock(pos.x, pos.y));
+        }
+      }, 8000, 2000);
+
+      // 创建生命, 仅创建一个
+      pos = self.getAvablePos();
+      if (pos) {
+        allHearts.push(new Heart(pos.x, pos.y));
+      }
+
+      // 创建宝石
+      pos = self.getAvablePos();
+      if (pos) {
+        allGems.push(new Gem(pos.x, pos.y));
+        loop(function() {
+          clearGems();
+          var pos = self.getAvablePos();
+          if (pos) {
+            allGems.push(new Gem(pos.x, pos.y));
+          }
+        }, 5000, 2000);
+      }
+
+      // 创建敌人, 优先创建三个敌人
       self.creatEnemy();
       self.creatEnemy();
       self.creatEnemy();
@@ -218,21 +395,23 @@ var game = (function() {
       this.state = GAME_WIN;
       Resources.get("sounds/success.mp3").play();
     },
-    setting: function() {
-      player = undefined;
-      game.state = GAME_SETTING;
-    },
     render: function() {
       var rowImages = level[this.level].rowImages;
       var numRows = level[this.level].numRows;
       var numCols = level[this.level].numCols;
       var rol, col;
 
-      // 补齐顶部留白部分
+      // 补齐顶部和底部留白部分
       ctx.beginPath();
       ctx.rect(0, 0, 505, 50);
       ctx.fillStyle = "white";
       ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(0, 585);
+      ctx.lineTo(505, 585);
+      ctx.lineWidth = 5;
+      ctx.strokeStyle = "white";
+      ctx.stroke();
 
       /* 便利我们上面定义的行和列，用 rowImages 数组，在各自的各个位置绘制正确的图片 */
       for (row = 0; row < numRows; row++) {
@@ -250,7 +429,7 @@ var game = (function() {
 
       // 根据游戏状态渲染不同界面
       switch (this.state) {
-        case GAME_SETTING:
+        case GAME_SETROLE:
           drawBigFont("CHOOSE ROLE", 252, 200);
           drawSmallFont("press LEFT & RIGHT change role", 252, 280);
           drawSmallFont("press ENTER into game", 252, 320);
@@ -264,6 +443,7 @@ var game = (function() {
           }
           break;
         case GAME_BEGIN:
+          drawGameState(this.score, (this.timeLimit / level[this.level].gameTime), player.state)
           break;
         case GAME_WIN:
           ctx.beginPath();
@@ -299,11 +479,18 @@ var game = (function() {
           readyTime = null;
         }
       }
+
+      if (this.state === GAME_BEGIN) {
+        this.timeLimit = this.timeLimit - 1000 * dt;
+        if (this.timeLimit < 0) {
+          this.fail();
+        }
+      }
       // 更新各个游戏实体
       updateEntities(dt);
 
       switch (this.state) {
-        case GAME_SETTING:
+        case GAME_SETROLE:
           break;
         case GAME_BEGIN:
           // 碰撞检测
@@ -389,12 +576,12 @@ var Player = function(role) {
   this.sprite = role || "images/char-boy.png";
 };
 
-// 此为游戏必须的函数，用来更新玩家的位置
-// 参数: dt ，表示时间间隙
+/* 此为游戏必须的函数，用来更新玩家的状态
+ * 参数: dt ，表示时间间隙
+ */
 Player.prototype.update = function(dt) {
-  // 你应该给每一次的移动都乘以 dt 参数，以此来保证游戏在所有的电脑上
-  // 都是以同样的速度运行的
-  if (this.state == 1 && this.y === 0) {
+  // 当玩家状态为游戏进行时并且 y 为0(到河对岸)时胜利
+  if (this.state > 0 && this.y === 0) {
     this.win();
   }
 };
@@ -404,15 +591,24 @@ Player.prototype.render = function() {
   ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
 };
 
-// 玩家死亡操作
+/* 玩家死亡操作
+ * 玩家死亡时调用游戏失败操作
+ */
 Player.prototype.death = function() {
-  this.state = 0;
-  game.fail();
+  Resources.get("sounds/anniu-shitou2.mp3").play();
+  this.state--;
+  this.x = 2 * COL;
+  this.y = 5 * ROW;
+  if (this.state === 0) {
+    game.fail();
+  }
 };
 
-// 玩家胜利操作
+/* 玩家胜利操作
+ * 玩家胜利时,调用游戏胜利函数
+ */
 Player.prototype.win = function() {
-  this.state = 2;
+  this.state = -1;
   game.win();
 };
 
@@ -434,15 +630,124 @@ Player.prototype.handleInput = function(key) {
       newY = newY + ROW;
       break;
   }
+
+  // 边界判断
   if (newX < 0 || newX > MAXX || newY < 0 || newY > MAXY) {
     Resources.get("sounds/anniu-shitou2.mp3").play();
-  } else {
-    this.x = newX;
-    this.y = newY;
-    Resources.get("sounds/anniu-katong7.mp3").play();
+    return;
+  }
+  //是否踩石头. 石头所在区域不可踩
+  var stones = game.getAllRocks();
+  for (var i = stones.length - 1; i >= 0; i--) {
+    stones[i]
+    if (stones[i].x === newX && stones[i].y === newY) {
+      Resources.get("sounds/anniu-shitou2.mp3").play();
+      return;
+    }
+  }
+  this.x = newX;
+  this.y = newY;
+  Resources.get("sounds/anniu-katong7.mp3").play();
+};
+
+// 游戏中的宝石道具
+var Gem = function(x, y, time) {
+  this.x = x || 0;
+  this.y = y || 0;
+  this.timeLimit = time || 10000;
+  this.sprite = "images/Gem-Orange.png";
+  this.state = 1;
+  this.timeSnd = this.timeLimit * 0.6; // 二级宝石蜕变时间
+  this.timeTrd = this.timeLimit * 0.3; // 三级宝石蜕变时间
+};
+
+/* 此为游戏必须的函数，用来更新宝石
+ * 参数: dt ，表示时间间隙
+ * 宝石会随着时间减弱能力最终消失
+ */
+Gem.prototype.update = function(dt) {
+  this.timeLimit = this.timeLimit - 1000 * dt;
+  if (this.timeLimit < 0) {
+    this.state = 0;
+    return;
+  }
+  if (this.timeLimit < this.timeSnd) {
+    this.sprite = "images/Gem-Green.png";
+  }
+  if (this.timeLimit < this.timeTrd) {
+    this.sprite = "images/Gem-Blue.png";
   }
 };
 
+// 此为游戏必须的函数，用来在屏幕上画出宝石
+Gem.prototype.render = function() {
+  if (this.state != 0) {
+    ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
+  }
+};
+
+// 当宝石被玩家获取时执行的动作
+Gem.prototype.gain = function() {
+  switch (this.sprite) {
+    case "images/Gem-Orange.png":
+      game.score += 10;
+      game.timeLimit += 5000;
+      break;
+    case "images/Gem-Green.png":
+      game.score += 5;
+      game.timeLimit += 3000;
+      break;
+    case "images/Gem-Blue.png":
+      game.score += 1;
+      game.timeLimit += 2000;
+      break;
+    default:
+      console.error("意外的宝石类型");
+  }
+  Resources.get("sounds/anniu-kehuan1.mp3").play();
+  this.state = 0;
+};
+
+/* 游戏中的石头道具
+ * 有石头的格子不可踩
+ */
+var Rock = function(x, y) {
+  this.x = x || 0;
+  this.y = y || 0;
+  this.sprite = "images/Rock.png";
+};
+
+Rock.prototype.update = function(dt) {};
+
+// 此为游戏必须的函数，用来在屏幕上画出玩家
+Rock.prototype.render = function() {
+  ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
+};
+
+/* 游戏中的生命道具
+ * 获取到生命道具可多一条命
+ */
+var Heart = function(x, y) {
+  this.x = x || 0;
+  this.y = y || 0;
+  this.sprite = "images/Heart.png";
+};
+
+Heart.prototype.update = function(dt) {};
+
+// 此为游戏必须的函数，用来在屏幕上画出玩家
+Heart.prototype.render = function() {
+  if (this.state !== 0) {
+    ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
+  }
+};
+
+// 获取到生命道具使玩家多一条命
+Heart.prototype.gain = function() {
+  game.getPlyer().state += 1;
+  Resources.get("sounds/anniu-kehuan1.mp3").play();
+  this.state = 0;
+};
 
 // 这段代码监听游戏玩家的键盘点击事件并且代表将按键的关键数字送到 Play.handleInput()
 // 方法里面。你不需要再更改这段代码了。
@@ -457,7 +762,7 @@ document.addEventListener('keydown', function(e) {
   };
 
   switch (game.state) {
-    case GAME_SETTING:
+    case GAME_SETROLE:
       game.changeSet(allowedKeys[e.keyCode]);
       break;
     case GAME_BEGIN:
@@ -467,12 +772,12 @@ document.addEventListener('keydown', function(e) {
       break;
     case GAME_WIN:
       if (e.keyCode === 13) {
-        game.setting();
+        game.setRole();
       }
       break;
     case GAME_FAIL:
       if (e.keyCode === 13) {
-        game.setting();
+        game.setRole();
       }
       break;
     case GAME_READY:

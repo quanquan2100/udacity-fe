@@ -110,9 +110,6 @@ var game = (function() {
   }
 
   function loop(fuc, basicTime, tTime) {
-    // if (game.state !== GAME_READY && game.state !== GAME_BEGIN) {
-    //   return;
-    // }
     var rand = Math.floor(Math.random() * tTime) + basicTime;
     setTimeout(function() {
       if (game.state !== GAME_READY && game.state !== GAME_BEGIN) {
@@ -225,6 +222,7 @@ var game = (function() {
 
   // 绘制游戏状态, 剩余时间, 剩余生命, 当前分数
   function drawGameState(score, timePct, heart) {
+    // 绘制当前分数和生命值
     ctx.strokeStyle = "black";
     ctx.textAlign = "left";
     ctx.lineWidth = 2;
@@ -450,8 +448,9 @@ var game = (function() {
           ctx.rect(0, 50, 505, 536);
           ctx.fillStyle = "rgba(255, 255, 255, 0.30)";
           ctx.fill();
-          drawBigFont("YOU WIN!", 252, 280);
-          drawSmallFont("press ENTER into new game", 252, 350);
+          drawBigFont("YOU WIN!", 252, 220);
+          drawBigFont("SCROE IS " + this.score + "!", 252, 330);
+          drawSmallFont("press ENTER into new game", 252, 390);
           break;
         case GAME_FAIL:
           ctx.beginPath();

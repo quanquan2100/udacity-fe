@@ -259,6 +259,7 @@ var game = (function() {
     role: "images/char-boy.png",
     score: 0,
     timeLimit: 20000,
+    // 清除所有游戏实体, 包括玩家,敌人,宝石,生命, 石头
     clearAllEntities: function() {
       player = undefined;
       allEnemies = [];
@@ -267,16 +268,19 @@ var game = (function() {
       allHearts = [];
       allGems = [];
     },
+    // TODO: 游戏难度设置
     setLevel: function(levelVal) {
       this.level = levelVal;
       this.time = level[levelVal].gameTime;
     },
+    // 设置游戏角色
     setRole: function() {
       this.clearAllEntities();
       this.timeLimit = level[this.level].gameTime;
       this.score = 0;
       this.state = GAME_SETROLE;
     },
+    // 获取玩家对象
     getPlyer: function() {
       if (player) {
         return player;
@@ -284,18 +288,23 @@ var game = (function() {
         return false;
       }
     },
+    // 获取敌人列表
     getAllEnemies: function() {
       return allEnemies;
     },
+    // 获取石头列表
     getAllRocks: function() {
       return allRocks;
     },
+    // 获取宝石列表
     getAllGems: function() {
       return allGems;
     },
+    // 获取生命列表
     getAllHearts: function() {
       return allHearts;
     },
+    // 宝石,石头,生命创建时会调用本函数, 本函数用于提供随机的可放置的位置
     getAvablePos: function() {
       if (allPos.length === 0) {
         return false;
@@ -311,11 +320,14 @@ var game = (function() {
         return result;
       }
     },
+    // 创建敌人
     creatEnemy: function() {
       var row = (Math.floor(Math.random() * (level[this.level].tRow - 0.01)) + 1) * ROW;
       var v = Math.floor(Math.random() * level[this.level].tV) + level[this.level].basicV;
       allEnemies.push(new Enemy(row, (-1 * COL), v));
     },
+    // 开始游戏, 首先会进入准备阶段, 准备阶段让敌人可先行入场
+    // 生成各个游戏实例
     start: function() {
       // 进入游戏准备阶段
       // 准备音乐, 准备期是为了让敌人有时间占据游戏画面, 此时不可操控玩家
@@ -385,14 +397,17 @@ var game = (function() {
         self.creatEnemy(); // 创建新 enemy
       }, level[this.level].basicTime, level[this.level].tTime);
     },
+    // 游戏失败
     fail: function() {
       this.state = GAME_FAIL;
       Resources.get("sounds/fail.mp3").play();
     },
+    // 游戏胜利
     win: function() {
       this.state = GAME_WIN;
       Resources.get("sounds/success.mp3").play();
     },
+    // 渲染, 每一帧会调用本函数以渲染画面
     render: function() {
       var rowImages = level[this.level].rowImages;
       var numRows = level[this.level].numRows;
@@ -469,6 +484,7 @@ var game = (function() {
           console.log("未知的游戏状态");
       }
     },
+    // 更新
     update: function(dt) {
       // 更新倒计时
       if (this.state === GAME_READY) {
@@ -505,6 +521,7 @@ var game = (function() {
           console.log("奇怪的游戏状态");
       }
     },
+    // 切换角色
     changeSet: function(opt) {
       var active;
       for (var i = (role.length - 1); i >= 0; i--) {

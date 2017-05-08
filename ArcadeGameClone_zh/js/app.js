@@ -273,7 +273,7 @@ var game = (function() {
     },
     setRole: function() {
       this.clearAllEntities();
-      this.timeLimit = role[this.level].gameTime;
+      this.timeLimit = level[this.level].gameTime;
       this.score = 0;
       this.state = GAME_SETROLE;
     },

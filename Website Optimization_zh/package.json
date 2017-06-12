@@ -1,0 +1,33 @@
+{
+  "name": "website-optimization",
+  "version": "1.0.0",
+  "description": "优化这个在线项目的速度",
+  "main": "gulpfile.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/quanquan2100/udacity-fe.git"
+  },
+  "keywords": [
+    "网站",
+    "优化"
+  ],
+  "author": "quanquan",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/quanquan2100/udacity-fe/issues"
+  },
+  "homepage": "https://github.com/quanquan2100/udacity-fe#readme",
+  "devDependencies": {
+    "del": "^3.0.0",
+    "gulp": "^3.9.1",
+    "gulp-clean-css": "^3.4.1",
+    "gulp-htmlmin": "^3.0.0",
+    "gulp-imagemin": "^3.3.0",
+    "gulp-inline-css": "^3.1.0",
+    "gulp-uglify": "^3.0.0",
+    "pump": "^1.0.2"
+  }
+}

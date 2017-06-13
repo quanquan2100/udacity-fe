@@ -7,6 +7,7 @@
   <meta name="description" content=" FILL ME IN ">
   <meta name="author" content=" FILL ME IN ">
   <title>Cameron Pittman: Portfolio</title>
+  <!-- 对于内容不大的 css 进行内联, 以减少关键资源数量 -->
   <style type="text/css">
   html {
     font-size: 100%;
@@ -151,6 +152,7 @@
     }
   }
   </style>
+  <!-- 本 css 适用于打印情况, 因此不是关键渲染资源, 通过添加媒体查询删除 -->
   <link href="css/print.css" rel="stylesheet" media="print">
   <script async src="js/perfmatters.js"></script>
 </head>
@@ -169,6 +171,7 @@
     <div class="content">
       <ul>
         <li>
+          <!-- 外网资源由于网速不稳定, 将其放置在项目内部 -->
           <img src="img/img1.jpg">
           <a href="project-2048.html">Build Your Own 2048!</a>
           <p>I made my own version of 2048. How cool is that!?</p>
@@ -184,6 +187,7 @@
           <p>Making mobile apps isn't so hard after all.</p>
         </li>
         <li>
+          <!-- 过大图片进行了压缩, 由于这里定死了显示100px 宽, 着按照100px 裁剪, 并重新命名以避免影响其它使用该图片的页面 -->
           <img style="width: 100px;" src="img/pizzeria100.jpg">
           <a href="views/pizza.html">Cam's Pizzeria</a>
           <p>Who wants a performant pizza?</p>
@@ -197,7 +201,9 @@
 </body>
 
 </html>
+<!-- 字体文件大, 并且不是关键渲染资源, 移到最底端避免对页面呈现的影响 -->
 <link href="//fonts.googleapis.com/css?family=Open+Sans:400,700" rel="stylesheet">
+<!-- 分析工具同样与页面呈现无关, 放置在页面底部, 避免对页面呈现的影响 -->
 <script>
 (function(i, s, o, g, r, a, m) {
   i['GoogleAnalyticsObject'] = r;

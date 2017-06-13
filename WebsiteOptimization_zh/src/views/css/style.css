@@ -50,6 +50,8 @@ form {
  .container {
   background-color: rgba(240, 60, 60, 0.8);
 }
+
+/* 将小 pizza 拆分到了以下几个元素中, 并且通过 will-change 新建了 layer */
 #movingPizzas0, #movingPizzas1, #movingPizzas2, #movingPizzas3, #movingPizzas4 {
   will-change:transform;
   position: fixed;

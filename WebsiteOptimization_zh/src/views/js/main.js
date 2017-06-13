@@ -417,6 +417,7 @@ var pizzaElementGenerator = function(i) {
 };
 
 // 当网站中"Our Pizzas"的滑窗部分移动时调用resizePizzas(size)函数
+// 使用闭包保存需要的函数, 而不是每次调用 resizePizzas 时都创建一遍所需函数
 var resizePizzas = function() {
 
   // 改变滑窗前披萨的尺寸值
@@ -464,13 +465,16 @@ var resizePizzas = function() {
 
   // 遍历披萨的元素并改变它们的宽度
   function changePizzaSizes(size) {
+    // 缓存 nodelist 而不是每次都重新遍历一遍 dom
     var randomPizzaContainer = document.querySelectorAll(".randomPizzaContainer");
+    // 新宽度数组, 通过该缓存数组避免强制同步布局.
     var newwidthArr = [];
     for (var i = 0, j = randomPizzaContainer.length; i < j; i++) {
       var dx = determineDx(randomPizzaContainer[i], size);
       var newwidth = (randomPizzaContainer[i].offsetWidth + dx) + 'px';
       newwidthArr.push(newwidth);
     }
+    // 所有宽度已获取到的情况下, 统一修改样式
     for (var i = 0, j = randomPizzaContainer.length; i < j; i++) {
       randomPizzaContainer[i].style.width = newwidthArr[i];
     }
@@ -531,20 +535,14 @@ function updatePositions() {
 
   var items = document.querySelectorAll('.mover');
   var x = document.body.scrollTop / 1250;
-  // var leftArr = []
-  // for (var i = 0; i < items.length; i++) {
-  //   var phase = Math.sin(x + (i % 5));
-  //   leftArr.push(items[i].basicLeft + 100 * phase + 'px');
-  // }
-  // for (var i = 0; i < items.length; i++) {
-  //   items[i].style.left = leftArr[i];
-  // }
+  // 使用 transform 而不是修改 left 来改变位置
+  // 根据计算表达式(i % 5), 每5个小 pizza 一个循环, 实际上只有五种唯一情况
   var transformArr = [];
   for (var i = 0; i < 5; i++) {
     var phase = Math.sin(x + (i % 5));
     transformArr.push("translateX(" + 100 * phase + "px)" );
   }
-  // debugger;
+  // 由于我们把一起动的 pizza 放入一个元素中, 因此只需要移动这5个元素即可
   for (var i = 0; i < 5; i++) {
     document.getElementById("movingPizzas" + i).style.transform = transformArr[i];
   }
@@ -573,9 +571,10 @@ document.addEventListener('DOMContentLoaded', function() {
     elem.src = "images/pizza.png";
     elem.style.height = "100px";
     elem.style.width = "73.333px";
-    // elem.basicLeft = (i % cols) * s;
+    // 初始位置直接使用 left 表示出来, 位移之后由 translateX 处理更清晰
     elem.style.left = (i % cols) * s + 'px';
     elem.style.top = (Math.floor(i / cols) * s) + 'px';
+    // 由于小 pizza 的位移只有5种情况, 因此将一起动(相对位置保持不变)的 pizza 放入同一元素
     document.querySelector("#movingPizzas" + (i % 5)).appendChild(elem);
   }
   updatePositions();

@@ -12,9 +12,16 @@ function loadData() {
     $nytElem.text("");
 
     // load streetview
-    $("body").append('<img class="bgimg" src="http://maps.googleapis.com/maps/api/streetview?size=600x300&location=' + $("#street").val() + "," + $("#city").val() + '">')
+    var streerStr = $("#street").val();
+    var cityStr = $("#city").val();
+    $("body").append('<img class="bgimg" src="http://maps.googleapis.com/maps/api/streetview?size=600x300&location=' + streerStr+ "," + cityStr + '">');
 
     // YOUR CODE GOES HERE!
+    var nytimesKey = "AIzaSyAcKuNWvchfVg45w8ZLy8HXE7eieDOI-uE";
+    var url = "http://api.nytimes.com/svc/search/v2/articlesearch.json?fq=romney&sort=newest&facet_field=day_of_week&begin_date=20120101&end_date=20120101&api-key=" + nytimesKey;
+    $.getJSON(url, function(data) {
+        console.log(data);
+    });
 
     return false;
 };

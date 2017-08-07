@@ -1,0 +1,25 @@
+{
+  "name": "neighborhood",
+  "homepage": "https://github.com/quanquan2100/udacity-fe",
+  "authors": [
+    "zhanglinling <zhanglinling0926@gmail.com>"
+  ],
+  "description": "udacity project",
+  "main": "app.js",
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery": "^3.2.1",
+    "requirejs": "^2.3.3",
+    "underscore": "^1.8.3",
+    "knockout": "knockoutjs#^3.4.2",
+    "bootstrap": "v4.0.0-alpha.6",
+    "tether": "^1.4.0"
+  }
+}

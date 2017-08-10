@@ -6,19 +6,19 @@ Anijs 是什么? http://anijs.github.io/
 
 Anijs 由于其性能的原因, 我需要对其进行改进. 性能问题是, 当有新的元素插入进页面时, Anijs 提供的 run 方法并不接受任何参数, 意味着需要整个页面重新初始化. 两年前, 仅是为了搞明白插件怎么用, 现在再次回看感觉却是在通过代码了解作者是怎么想的, 他想用这个插件解决什么问题. 也明白这个插件必将废弃.
 
-{{{
+```
 ADVANTAGES
 
 Better integration between coders and designers. | Easy to use 
 Speed of development. | Around 9.0kb after gzipping 
 There is no need for third party libraries.
-}}}
+```
 
 插件的目的是 "integration between coders and designers", 能看出来. 通过人类能看懂的语句, 而不是程序代码, 放在 HTML 元素中. (我认为 HTML 部分是设计师可以触碰的部分, 你看 Dreamweaver 做给谁用的) 方便的实现了对用户操作的动画响应效果. 语句类似:
 
-{{{
+```
 If some event(click, scroll, mouseover and more), On any element (css selector), Do some behavior(Rotate animation), To (any element).
-}}}
+```
 
 Anijs 做的事情, 是将原本需要 corder 使用代码书写的事件, 使用带语意的简单语句表达. 这样 designers 在设计页面的时候就可以直接编写. 这样省去了 designers 向 corder 说明的工作, 和 corder 根据 designers 设计书写代码的工作.
 
@@ -30,9 +30,9 @@ Anijs 先做了 CSS3 动画效果, 但发现元素需要状态. CSS3动画效果
 
 dom 操作进来之后, Anijs 已经开始变味了. 它只是个插件, 但是却越来越庞大想把自己当做"框架". 为什么这么说. 框架是帮助页面结构组织的, 框架其实代表一个思想, 关于如何看待页面的思想. 其核心围绕在数据和显示之间的关系. 网页的核心我认为是信息的展示和获取, 向用户展示信息, 以及获取用户提供的信息. 而所有的界面就是引导用户你的眼睛放在哪里, 你的操作应该是点哪里. 而动画只是引导的一种手段, 告诉用户这里可以点或是后台正在处理你的操作等等. 当 designers 轻易的删除或是增加页面的 dom 元素时, corder 会抓狂的. 元素应该服务器中确定删除后再删除页面的元素, 或是获取服务器的信息根据信息生成元素. 而 Anijs 这是跳开了这一切. 就好像看过的一个笑话.
 
-{{{
-<a href="javascript:alert('清除成功');"> 清除缓存</a>
-}}}
+```
+  <a href="javascript:alert('清除成功');"> 清除缓存</a>
+```
 
 
 实在不行, Anijs 还可以加入扩展功能函数的功能. corder 自己写功能函数. 然而我的体验是加自定义功能函数困难, 参数限制很多, 不可以带",", "|"等. 不支持 jQuery 事件系统, 虽然官方提供了 jQuery 事件系统的扩展文件, 但是该文件, 并 没 有 用(有 bug). 并且获取不到事件对象, 事件中带的数据也获取不到, 还有不支持多分支的处理, 比如错误处理等.

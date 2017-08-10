@@ -2,7 +2,7 @@
 
 中国的许多前端开发者, 往往会以自己"会" js 面向对象而标榜自己会用 js, 但我认为不是. 举一个可笑的例子, 曾经公司招来一个新人, processElement 函数是, 每当元素添加进页面时就会执行一次. 也就是会多次执行的一个函数.
 
-{{{
+```js
 /*
    * @description 初始化每个元素
    * @param {jQuery object} $ele - 需要初始化的元素
@@ -27,7 +27,7 @@
     var share2 = new ShareTip();
     share2.sharetosina(tit, srce, kpic);
   };
-}}}
+```
 
 是不是在硬凹. 每次 process 一个元素, 就创建一个类, 并实例化一个. 从这段代码看出的不是他会 js 面向对象, 而是他什么也不会.
 

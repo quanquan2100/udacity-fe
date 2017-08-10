@@ -1,3 +1,43 @@
 # Anijs 之死
-* [项目一: 青蛙过河](https://github.com/quanquan2100/udacity-fe/tree/master/ArcadeGameClone_zh)
-* [项目二: 网站优化](https://github.com/quanquan2100/udacity-fe/tree/master/WebsiteOptimization_zh)
+
+Anijs 是什么? http://anijs.github.io/
+
+两年前已经停更了. 为什么会写这篇内容, 一是因为我所在的公司使用这个插件, 二是学习页面组织结构的知识对其有的新认识. 
+
+Anijs 由于其性能的原因, 我需要对其进行改进. 性能问题是, 当有新的元素插入进页面时, Anijs 提供的 run 方法并不接受任何参数, 意味着需要整个页面重新初始化. 两年前, 仅是为了搞明白插件怎么用, 现在再次回看感觉却是在通过代码了解作者是怎么想的, 他想用这个插件解决什么问题. 也明白这个插件必将废弃.
+
+{{{
+ADVANTAGES
+
+Better integration between coders and designers. | Easy to use 
+Speed of development. | Around 9.0kb after gzipping 
+There is no need for third party libraries.
+}}}
+
+插件的目的是 "integration between coders and designers", 能看出来. 通过人类能看懂的语句, 而不是程序代码, 放在 HTML 元素中. (我认为 HTML 部分是设计师可以触碰的部分, 你看 Dreamweaver 做给谁用的) 方便的实现了对用户操作的动画响应效果. 语句类似:
+
+{{{
+If some event(click, scroll, mouseover and more), On any element (css selector), Do some behavior(Rotate animation), To (any element).
+}}}
+
+Anijs 做的事情, 是将原本需要 corder 使用代码书写的事件, 使用带语意的简单语句表达. 这样 designers 在设计页面的时候就可以直接编写. 这样省去了 designers 向 corder 说明的工作, 和 corder 根据 designers 设计书写代码的工作.
+
+但是, 事实上它无法完成打通 corder 和 designers. 
+
+Anijs 先做了 CSS3 动画效果, 但发现元素需要状态. CSS3动画效果是这个插件的重心. Anijs 使用了 Animation 的 CSS3 效果库. 但是 CSS3 并不能实现状态切换的功能, 效果总是在做完动画后回到原始状态. 做完效果, 元素还是原来那个元素, 是选中了,是激活了, 还是其他? 只能看出这是一个做过某某效果的元素. 无法把元素从一个状态切换到另一个状态, 使得这个插件几乎没什么用.
+
+为了实现元素真实的状态切换, 又添加了对 class 的一系列处理. 那么 class 对应的样式谁来书写, class 对于的状态语义和需要的 HTML 代码结构谁来设计? 此时对 designers 就不友好了. 除了状态的切换, 页面还需要元素的增加和删除, 于是对 dom 的操作进一步被添加进来.
+
+dom 操作进来之后, Anijs 已经开始变味了. 它只是个插件, 但是却越来越庞大想把自己当做"框架". 为什么这么说. 框架是帮助页面结构组织的, 框架其实代表一个思想, 关于如何看待页面的思想. 其核心围绕在数据和显示之间的关系. 网页的核心我认为是信息的展示和获取, 向用户展示信息, 以及获取用户提供的信息. 而所有的界面就是引导用户你的眼睛放在哪里, 你的操作应该是点哪里. 而动画只是引导的一种手段, 告诉用户这里可以点或是后台正在处理你的操作等等. 当 designers 轻易的删除或是增加页面的 dom 元素时, corder 会抓狂的. 元素应该服务器中确定删除后再删除页面的元素, 或是获取服务器的信息根据信息生成元素. 而 Anijs 这是跳开了这一切. 就好像看过的一个笑话.
+
+{{{
+<a href="javascript:alert('清除成功');"> 清除缓存</a>
+}}}
+
+
+实在不行, Anijs 还可以加入扩展功能函数的功能. corder 自己写功能函数. 然而我的体验是加自定义功能函数困难, 参数限制很多, 不可以带",", "|"等. 不支持 jQuery 事件系统, 虽然官方提供了 jQuery 事件系统的扩展文件, 但是该文件, 并 没 有 用(有 bug). 并且获取不到事件对象, 事件中带的数据也获取不到, 还有不支持多分支的处理, 比如错误处理等.
+
+终于作者且停更这个插件了. 原本作者想针对特定的问题(CSS3效果)简化代码, 简化事件机制. 慢慢发现各个因素是关联在一起的, 当其他逻辑和数据的信息关联在一起时, 问题已经变得复杂, 原始的简化思路是进行不下去的. 当然如果你就想实现一个, 点一下就弹一下的元素, 使用 Anijs 还是很方便的.
+
+两点体会, 一是把握核心, 从数据的角度发现问题以及提出解决方案. 这是可行的, 比如现在的很多框架. 二是, 想要实现简单图形界面来替代 corder 现在尚不可行. 图形界面会逐渐复杂, 加入数据的处理, 加入分支判断, 最后把使用者变成程序员, 不会写代码却有种程序思维的程序员.
+

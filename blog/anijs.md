@@ -46,5 +46,5 @@ dom 操作进来之后, Anijs 已经开始变味了. 它只是个插件, 但是�
 优化结果对比:
 我重写的页面初始化时执行时间: 2.74ms
 原始代码执行时间: 17.55ms
-![alt text](https://github.com/quanquan2100/udacity-fe/tree/master/blog/img/Selection_066.png "原始 anijs")
-![alt text](https://github.com/quanquan2100/udacity-fe/tree/master/blog/img/Selection_067.png "重写的 anijs")
+![alt text](https://github.com/quanquan2100/udacity-fe/raw/master/blog/img/Selection_066.png "原始 anijs")
+![alt text](https://github.com/quanquan2100/udacity-fe/raw/master/blog/img/Selection_067.png "重写的 anijs")

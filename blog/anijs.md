@@ -44,7 +44,10 @@ dom 操作进来之后, Anijs 已经开始变味了. 它只是个插件, 但是�
 两点体会, 一是把握核心, 从数据的角度发现问题以及提出解决方案. 这是可行的, 比如现在的很多框架. 二是, 想要实现简单图形界面来替代 corder 现在尚不可行. 图形界面会逐渐复杂, 加入数据的处理, 加入分支判断, 最后把使用者变成程序员----有程序思维却不会写代码的程序员.
 
 优化结果对比:
+
+## 页面初始化
+
 我重写的页面初始化时执行时间: 2.74ms
 原始代码执行时间: 17.55ms
-![alt text](https://github.com/quanquan2100/udacity-fe/raw/master/blog/img/Selection_066.png "原始 anijs")
-![alt text](https://github.com/quanquan2100/udacity-fe/raw/master/blog/img/Selection_067.png "重写的 anijs")
+![alt text](https://github.com/quanquan2100/udacity-fe/raw/master/blog/img/Selection_067.png "原始 anijs")
+![alt text](https://github.com/quanquan2100/udacity-fe/raw/master/blog/img/Selection_066.png "重写的 anijs")

@@ -82,3 +82,40 @@ function xxx() {
 }
 ```
 函数必须以成功或者失败结束. 返回值不再以 return 的形式回传
+
+这个思考方式具体带来了什么区别. 看上方代码可能并感受不出来. 举个例子, 需要实现一个功能函数切换元素的显示状态:
+
+```js
+function changeState($ele) {
+	if ($ele.css("display") === "none") {
+		$ele.css("display", block);
+	} else {
+		$ele.css("display", none);
+	}
+}
+```
+函数并没有问题, 这是非promise处理问题的思考方法. 而一旦使用 promise 思考方法, 我们会显示的考虑这个函数执行成功和失败. 所以代码处理
+
+
+```js
+function changeState($ele) {
+	if ($ele.css("display") === "none") {
+		$ele.css("display", block);
+	} else {
+		$ele.css("display", none);
+	}
+	success(); // 明确指出成功了, 并且这个函数并不会失败, 不是没考虑失败的处理, 而是考虑了, 没有失败的状态
+}
+
+// 使用 promise 真实语法为
+function changeState($ele) {
+	return new Promise(function(resolve, reject) {
+		if ($ele.css("display") === "none") {
+			$ele.css("display", block);
+		} else {
+			$ele.css("display", none);
+		}
+		resolve(); // 明确指出成功了, 并且这个函数并不会失败, 不是没考虑失败的处理, 而是考虑了, 没有失败的状态
+	});
+}
+```

@@ -248,3 +248,35 @@ body {
   margin-left: -15px;
   margin-right: -15px;
 }
+
+#home .menu i{
+    padding: 2rem;
+    background: white;
+    box-shadow: 0 4px 5px 0 rgba(0, 0, 0, 0.14), 0 2px 9px 1px rgba(0, 0, 0, 0.12), 0 4px 2px -2px rgba(0, 0, 0, 0.2);
+}
+
+.info-card {
+    padding: 15px 15px 0 15px;
+    background: white;
+    box-shadow: 0 4px 5px 0 rgba(0, 0, 0, 0.14), 0 2px 9px 1px rgba(0, 0, 0, 0.12), 0 4px 2px -2px rgba(0, 0, 0, 0.2);
+}
+
+.info-card .buttom {
+    background-color: #f1f1f1;/* 黄#ffe55d 蓝绿#00bfda 灰#d9d9d9*/
+    border: solid 1px white;
+    padding: 5px;
+}
+
+.info-card .info-card-title {
+     margin-bottom: 1rem;
+}
+
+.info-card .info-card-second {
+    color: #717171;
+    font-size: 0.8rem;
+    padding-bottom: 5px;
+}
+
+.md-15 {
+  margin-bottom: 15px;
+}

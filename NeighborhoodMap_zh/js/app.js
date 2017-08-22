@@ -2,35 +2,63 @@
   // 常量
   var MAP_APP_KEY = "AIzaSyAjkLBg_PHjw5O4h8S9tAc_iSojq4BKA9s";
 
+  // config require
+  requirejs.config({
+    baseUrl: "/bower_components",
+    paths: {
+      jquery: "jquery/dist/jquery.min",
+      bootstrap: "bootstrap/dist/js/bootstrap.min",
+      knockout: "knockout/dist/knockout",
+      underscore: "underscore/underscore",
+      tether: "tether/dist/js/tether", // 由于 bootstrap 使用其全局变量, 导致不适用于 require.
+      googlemap: "https://maps.googleapis.com/maps/api/js?libraries=places,geometry,drawing&key=" + MAP_APP_KEY + "&v=3&callback=define"
+    },
+    shim: {
+      bootstrap: {
+        deps: ['jquery']
+      }
+    }
+  });
 
   var app = {};
+  var $map, $modalDelComfirm, $modalSetting, $modalRecordPos, $modalSearch, $spinner;
   app.init = function() {
     return new Promise(function(resolve, reject) {
-      // config require
-      requirejs.config({
-        baseUrl: "/bower_components",
-        paths: {
-          jquery: "jquery/dist/jquery.min",
-          bootstrap: "bootstrap/dist/js/bootstrap.min",
-          knockout: "knockout/dist/knockout",
-          underscore: "underscore/underscore",
-          tether: "tether/dist/js/tether", // 由于 bootstrap 使用其全局变量, 导致不适用于 require.
-          googlemap: "https://maps.googleapis.com/maps/api/js?libraries=places,geometry,drawing&key=" + MAP_APP_KEY + "&v=3&callback=define"
-        },
-        shim: {
-          bootstrap: {
-            deps: ['tether', 'jquery']
-          }
-        }
-      });
 
-      requirejs(["jquery", "underscore", "knockout", "tether", "bootstrap"], function() {
-        app.spinner = $(".loader");
-        app.map = $("#map");
-        app.dialog = {
-          "error": $(".dialog-container #error")
+      requirejs(["knockout", "jquery", "underscore", "bootstrap"], function(ko) {
+        $map = $("#map"); 
+        $modalDelComfirm = $("#del-comfirm"); 
+        $modalSetting = $("#setting");
+        $modalRecordPos = $("#record-pos"); 
+        $modalSearch = $("search"); 
+        $spinner = $("#loader");
+
+        // view model
+        var viewModel = {
+          title: ko.observable(""),
+          view: ko.observable("main"),
+          tags: ko.observableArray([]),
+          centerLocation: {
+            lat: ko.observable(),
+            lng: ko.observable()
+          },
+          setting: {
+            range: ko.observable(300),
+            keyWords: ko.observable("")
+          },
+          planList: ko.observableArray([]),
+          visitedPos: ko.observableArray([
+            /*{
+              id: "xxx",
+              title: 'Park Ave Penthouse',
+              location: { lat: 40.7713024, lng: -73.9632393 },
+              like: false,
+              date: 2222222,
+              comment: "",
+              tags: ko.observableArray(["tag1"])
+            }*/
+          ])
         };
-
         resolve();
       }, function(err) {
         console.error("err:", err);
@@ -137,14 +165,15 @@
     });
   };
 
-  app.startLoad()
-  .then(app.init)
-  .then(app.initMap)
-  .then(app.endLoad)
-  .then(function(result) {
-    console.log(result);
-  }, function(err) {
-    console.log(err);
-  });
+  // app.startLoad()
+  //   .then(app.init)
+  //   .then(app.initMap)
+  //   .then(app.endLoad)
+  //   .then(function(result) {
+  //     console.log(result);
+  //   }, function(err) {
+  //     console.log(err);
+  //   });
+  app.init();
   window.app = app;
 }());

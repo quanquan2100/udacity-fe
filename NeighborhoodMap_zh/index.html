@@ -6,46 +6,196 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <title>NeighborhoodMap_zh</title>
   <link rel="stylesheet" href="/bower_components/bootstrap/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/bower_components/font-awesome/css/font-awesome.min.css" >
   <link rel="stylesheet" href="/css/style.css">
 </head>
 
 <body>
   <header class="header">
-    <h1 class="header__title">Neighborhood Map</h1>
-    <button id="butRefresh" class="headerButton" aria-label="Refresh"></button>
-    <button id="butAdd" class="headerButton" aria-label="Add" data-toggle="modal" data-target="#error"></button>
+    <div class="d-flex flex-row" style="width: 100%;">
+      <h4 data-bind="text:title">目的地列表</h4>
+      <div class="ml-auto" style="margin-right: 1rem;color: rgba(255, 255, 255, 0.71);">
+        <i class="fa fa-home" aria-hidden="true" style="padding-right: 1rem;"></i>
+        <i class="fa fa-cog" aria-hidden="true"></i></div>
+    </div>
   </header>
   <main class="main">
-    <div class="container-fluid height-100">
+    <div id="home" class="container-fluid height-100" hidden >
+      <div class="row no-gutters align-items-center height-100">
+        <div class="col" style="padding-bottom: 3rem;">
+          <!--首页-->
+          <h1 class="text-center menu"><i class="fa fa-list-alt rounded-circle"></i></h1>
+        </div>
+        <div class="col" style="padding-bottom: 3rem;">
+          <h1 class="text-center menu"><i class="fa fa-map-o rounded-circle"></i></h1>
+          <!--搜索新目的地 离线模式不可用-->
+        </div>
+      </div>
+    </div>
+    <div class="container-fluid height-100" hidden>
       <div class="row no-gutters align-items-start height-100">
-        <div class="col height-100">
-          <div id="map" class="height-100"></div>
+        <div class="col height-100" >
+          <!--地图模式-->
+          <div id="map" class="height-100" ></div>
+        </div>
+      </div>
+    </div>
+    <div class="container height-100" hidden>
+      <div class="row no-gutters align-items-start height-100">
+        <div class="col height-100" >
+          <div class="badge-pill text-center" style="background-color: white;color: gray; margin-top: 0.5rem;margin-bottom: 0.5rem;"><i class="fa fa-search" aria-hidden="true"></i> 添加筛选条件</div>
+          <ul class="list-inline" style="margin-bottom: 0.5rem;">
+            <li class="list-inline-item"><span class="badge badge-warning">博物馆</span></li>
+            <li class="list-inline-item"><span class="badge badge-warning">古典</span></li>
+          </ul>
+          <div style="font-size: 0.8rem;color: gray;">计划浏览的地点:</div>
+          <ul class="list-unstyled">
+            <li>
+              <div class="info-card rounded-top md-15">
+                <h4 class="info-card-title"><i class="fa fa-university" aria-hidden="true"></i> 国家博物馆</h4>
+                <p>中国国家博物馆（National Museum of China）简称国博，位于北京市中心天安门广场东侧，东长安街南侧，与人民大会堂东西相对称，是历史与艺术并重，集收藏、展览、研究、考古、公共教育、文化交流于一体的综合性博物馆。</p>
+                <div class="d-flex flex-row info-card-second" title="点击在地图中查看">
+                  <div><i class="fa fa-map-marker" aria-hidden="true"></i> 北京市海淀区西四环北路十号院</div>
+                  <div class="ml-auto">15.4km</div>
+                </div>
+                <div class="row">
+                  <div class="col text-center buttom" title="在地图中查看"><i class="fa fa-map-o" aria-hidden="true"></i></div>
+                  <div class="col text-center buttom" title="点击添加浏览记录"><i class="fa fa-paw" aria-hidden="true"></i></div>
+                  <div class="col text-center buttom" title="删除该目的地"><i class="fa fa-trash-o" aria-hidden="true"></i></div>
+                </div>
+              </div>
+            </li>
+          </ul>
+          <div style="font-size: 0.8rem;color: gray;">以下是已访问过的地点:</div>
+          <ul class="list-unstyled">
+            <li>
+              <div class="info-card rounded-top md-15">
+                <h4 class="info-card-title"><i class="fa fa-university" aria-hidden="true"></i> 观复博物馆</h4>
+                <div class="d-flex flex-row info-card-second">
+                  <div><i class="fa fa-clock-o" aria-hidden="true"></i> 2017年9月26日</div>
+                  <div class="ml-auto text-danger"><i class="fa fa-heart" aria-hidden="true"></i></div>
+                </div>
+                <p>纪要,说一段浏览的感受或者心得, 怎么着都行.</p>
+                <ul class="list-inline" style="padding-bottom: 5px;">
+                  <li class="list-inline-item"><span class="badge badge-warning">博物馆</span></li>
+                  <li class="list-inline-item"><span class="badge badge-warning">古典</span></li>
+                </ul>
+                <div class="row">
+                  <div class="col text-center buttom" title="在地图中查看"><i class="fa fa-map-o" aria-hidden="true"></i></div>
+                  <div class="col text-center buttom" title="编辑浏览记录"><i class="fa fa-pencil" aria-hidden="true"></i></div>
+                  <div class="col text-center buttom" title="删除该目的地"><i class="fa fa-trash-o" aria-hidden="true"></i></div>
+                </div>
+              </div>
+            </li>
+          </ul>
         </div>
       </div>
     </div>
   </main>
   <div class="dialog-container">
-    <div class="modal fade" id="error" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-      <div class="modal-dialog" role="document">
+    <!--设置对话框-->
+    <div id="setting" class="modal fade" id="error" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document" style="margin-top: 100px;">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
+            <h5 class="modal-title" id="exampleModalLabel">设置</h5>
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
               <span aria-hidden="true">&times;</span>
             </button>
           </div>
           <div class="modal-body">
-            ...
+            <div>设置, 搜索范围, 搜索关键字, 显示数量</div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-primary">Save changes</button>
+            <button type="button" class="btn btn-primary" data-dismiss="modal">关闭</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!--记录地点对话框-->
+    <div id="record-pos" class="modal fade" id="error" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document" style="margin-top: 100px;">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">记录地点</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label for="exampleInputEmail1">编辑标签:</label>
+              <div class="tags-input" style="background-color: #fff; border: 1px solid #ccc; box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075); padding: 4px 6px; color: #555; vertical-align: middle; border-radius: 4px; max-width: 100%; line-height: 22px; cursor: text;"> <span class="badge badge-primary">Primary</span>
+                <span class="badge badge-primary">Primary</span>
+                <input type="text" class="" id="new-tag" aria-describedby="new tag" placeholder="" style="border: none; box-shadow: none; outline: none; background-color: transparent; padding: 0 6px; margin: 0; width: auto; max-width: inherit;">
+              </div>
+              <small>
+                我的标签:
+              </small>
+              <div id="emailHelp" class="form-text text-muted">
+                <span class="badge badge-default">Default</span>
+                <span class="badge badge-primary">Primary</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="exampleTextarea">添加纪要:</label>
+              <textarea class="form-control" id="exampleTextarea" rows="3"></textarea>
+            </div>
+            <div class="form-check">
+              <label class="form-check-label">
+                <input type="checkbox" class="form-check-input">
+                是否喜欢
+              </label>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+            <button type="button" class="btn btn-primary">确定</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!--删除确认-->
+    <div id="del-comfirm" class="modal fade" id="error" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document" style="margin: 200px 30px;">
+        <div class="modal-content">
+          <div class="modal-body">
+            <div class="text-center">确认要删除吗?</div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">再想想</button>
+            <button type="button" class="btn btn-danger" data-dismiss="modal">确认</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!--搜索条件设置-->
+    <div id="search" class="modal fade" id="error" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document" style="margin-top: 100px;">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">筛选条件设置</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <p>点击选择相关标签:</p>
+            <div>
+              <button type="button" class="btn btn-warning">标签1</button>
+              <button type="button" class="btn btn-outline-warning">标签2</button>
+              <button type="button" class="btn btn-outline-warning">标签3  </button>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+            <button type="button" class="btn btn-primary" data-dismiss="modal">确定</button>
           </div>
         </div>
       </div>
     </div>
   </div>
-  <div class="loader">
+  <div class="loader" hidden>
     <svg viewBox="0 0 32 32" width="32" height="32">
       <circle id="spinner" cx="16" cy="16" r="14" fill="none"></circle>
     </svg>

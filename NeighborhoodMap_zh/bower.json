@@ -20,6 +20,7 @@
     "underscore": "^1.8.3",
     "knockout": "knockoutjs#^3.4.2",
     "bootstrap": "v4.0.0-alpha.6",
-    "tether": "^1.4.0"
+    "tether": "^1.4.0",
+    "font-awesome": "^4.7.0"
   }
 }

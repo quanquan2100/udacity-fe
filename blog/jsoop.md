@@ -25,6 +25,28 @@ function processElement($ele) {
   share2.sharetosina(tit, srce, kpic);
 }
 ```
+从效果上来说, 与下方代码相同
+```js
+function sharetosina(tit, srce, kpic) {
+  //...
+}
+
+function sharetoqqzone(tit, srce, kpic) {
+  //...
+}
+
+/*
+ * @description 初始化每个元素
+ * @param {jQuery object} $ele - 需要初始化的元素
+ */
+function processElement($ele) {
+  var tit = $ele.attr("data-tit");
+  var srce = $ele.attr("data-srce");
+  var kpic = $ele.attr("data-kpic");
+  sharetoqqzone(tit, srce, kpic);
+  sharetosina(tit, srce, kpic);
+}
+```
 
 是不是在硬凹. 每次 process 一个元素, 就创建一个类, 并实例化一个. **从这段代码看出的不是他会 js 面向对象, 而是他什么也不会.**
 

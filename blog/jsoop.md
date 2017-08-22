@@ -1,32 +1,29 @@
-# js 一定要面向对象吗
+# JS一定要面向对象吗
 
-中国的许多前端开发者, 往往会以自己"会" js 面向对象而标榜自己会用 js, 但我认为不是. 举一个可笑的例子, 曾经公司招来一个新人, processElement 函数是, 每当元素添加进页面时就会执行一次. 也就是会多次执行的一个函数.
+中国的存在这样的前端开发者, 他们认为 "会面向对象 JS" 表示自己 js 能力高. **但我认为不是**. 举一个真实例子, 公司曾招的一个新人, 书写了如下代码. 代码背景是: 每当页面添加某特定元素时, processElement 函数负责初始化这个元素. 页面可添加多个该元素, 也可以在页面运行期添加该元素, 新添加的元素都会由 processElement 函数初始化.
 
 ```js
 /*
-   * @description 初始化每个元素
-   * @param {jQuery object} $ele - 需要初始化的元素
-   */
-  function processElement($ele) {
-    // 分享
-    var ShareTip = function() {}
-    //分享到新浪微博  
-    ShareTip.prototype.sharetosina = function(tit, srce, kpic) {
-  	 ...
-    }
-    //分享到QQ空间  
-    ShareTip.prototype.sharetoqqzone = function(tit, srce, kpic) {
-      ...
-    }
+ * @description 初始化每个元素
+ * @param {jQuery object} $ele - 需要初始化的元素
+ */
+function processElement($ele) {
+  var ShareTip = function() {}
+  ShareTip.prototype.sharetosina = function(tit, srce, kpic) {
+    //...
+  }
+  ShareTip.prototype.sharetoqqzone = function(tit, srce, kpic) {
+    //...
+  }
 
-    var tit = $ele.attr("data-tit");
-    var srce = $ele.attr("data-srce");
-    var kpic = $ele.attr("data-kpic");
-    var share1 = new ShareTip();
-    share1.sharetoqqzone(tit, srce, kpic);
-    var share2 = new ShareTip();
-    share2.sharetosina(tit, srce, kpic);
-  };
+  var tit = $ele.attr("data-tit");
+  var srce = $ele.attr("data-srce");
+  var kpic = $ele.attr("data-kpic");
+  var share1 = new ShareTip();
+  share1.sharetoqqzone(tit, srce, kpic);
+  var share2 = new ShareTip();
+  share2.sharetosina(tit, srce, kpic);
+}
 ```
 
 是不是在硬凹. 每次 process 一个元素, 就创建一个类, 并实例化一个. **从这段代码看出的不是他会 js 面向对象, 而是他什么也不会.**

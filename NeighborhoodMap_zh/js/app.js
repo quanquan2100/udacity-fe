@@ -31,7 +31,7 @@
     return locations;
   }
 
-  var $map, $modalDelComfirm, $modalSetting, $modalRecordPos, $modalSearch, $spinner, $serachType;
+  var $map, $modalDelComfirm, $modalSetting, $modalRecordPos, $modalSearch, $spinner, $serachType, $viewMap, $viewHome, $viewList;
   var app = {};
 
   // 加载基本资源
@@ -53,6 +53,9 @@
         $spinner = $("#loader");
         $serachType = $("#search-type");
         $spinner= $(".loader");
+        $viewMap = $("#view-map"); 
+        $viewHome = $("#view-home"); 
+        $viewList = $("#view-list");
 
         // view model
         var viewModel = {
@@ -126,18 +129,31 @@
           var styles = [{ featureType: 'water', stylers: [{ color: '#19a0d8' }] }, { featureType: 'administrative', elementType: 'labels.text.stroke', stylers: [{ color: '#ffffff' }, { weight: 6 }] }, { featureType: 'administrative', elementType: 'labels.text.fill', stylers: [{ color: '#e85113' }] }, { featureType: 'road.highway', elementType: 'geometry.stroke', stylers: [{ color: '#efe9e4' }, { lightness: -40 }] }, { featureType: 'transit.station', stylers: [{ weight: 9 }, { hue: '#e85113' }] }, { featureType: 'road.highway', elementType: 'labels.icon', stylers: [{ visibility: 'off' }] }, { featureType: 'water', elementType: 'labels.text.stroke', stylers: [{ lightness: 100 }] }, { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ lightness: -100 }] }, { featureType: 'poi', elementType: 'geometry', stylers: [{ visibility: 'on' }, { color: '#f0e4d3' }] }, { featureType: 'road.highway', elementType: 'geometry.fill', stylers: [{ color: '#efe9e4' }, { lightness: -25 }] }];
           mapView.map = new google.maps.Map(document.getElementById('map'), {
             center: currentPosition,
-            zoom: 15,
+            zoom: 16,
             styles: styles,
             mapTypeControl: false
           });
 
           // This autocomplete is for use in the search within time entry box.
-          mapView.centerAutocomplete = new google.maps.places.Autocomplete(document.getElementById('set-center'));
+          mapView.centerAutocomplete = new google.maps.places.Autocomplete(document.getElementById('set-center'), {
+            componentRestrictions: {country: 'cn'}
+          });
+          mapView.centerAutocomplete.addListener('place_changed', function(){
+            mapView.largeInfowindow.close();
+            var place = this.getPlace();
+              if (!place.geometry) {
+              // User entered the name of a Place that was not suggested and
+              // pressed the Enter key, or the Place Details request failed.
+              window.alert("No details available for input: '" + place.name + "'");
+              return;
+            }
+            mapView.map.setCenter(place.geometry.location);
+            mapView.map.setZoom(17); 
+          });
 
           mapView.largeInfowindow = new google.maps.InfoWindow();
           mapView.largeInfowindow.addListener('closeclick', function() {
             this.marker = null;
-            console.log("infowindow set null");
           });
 
           // This function takes in a COLOR, and then creates a new marker
@@ -231,7 +247,7 @@
           mapView.geocoder = new google.maps.Geocoder();
           mapView.placesService = new google.maps.places.PlacesService(mapView.map);
 
-          function searchNearby () {
+          mapView.searchNearby =  function  () {
             var serachType = [];
             serachType.push($serachType.val());
             var searchOption = {
@@ -248,10 +264,10 @@
                 showMarkers(mapView.markers);
               }
             });
-          }
+          };
 
-          mapView.map.addListener('idle', searchNearby);
-          $modalSetting.on("hidden.bs.modal", searchNearby);
+          mapView.map.addListener('idle', mapView.searchNearby);
+          $modalSetting.on("hidden.bs.modal", mapView.searchNearby);
 
           mapView.centerMarker = new google.maps.Marker({
             position: currentPosition,
@@ -301,6 +317,15 @@
     });
   };
 
+  mapView.loadErrorView = function(data){
+    return new Promise (function(resolve, reject){
+      $viewMap.find("#view-map-main").attr("hidden", "hidden");
+      $viewMap.find("#view-map-main-error").removeAttr("hidden");
+      resolve(data);
+    });
+  };
+
+  app.mapView = mapView;
   app.startLoad = function(data) {
     return new Promise(function(resolve, reject) {
       if ($spinner) {
@@ -325,9 +350,7 @@
     })
     .then(mapView.showMap)
     .then(mapView.showVisitedPlace)
-    .catch(function (err) {
-      console.error(err);
-    })
+    .catch(mapView.loadErrorView)
     .then(app.endLoad);
   window.app = app;
 }());

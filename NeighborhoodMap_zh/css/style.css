@@ -280,3 +280,7 @@ body {
 .md-15 {
   margin-bottom: 15px;
 }
+
+.pac-container {
+  z-index: 10002;
+}

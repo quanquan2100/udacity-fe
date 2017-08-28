@@ -20,18 +20,39 @@
     }
   });
 
+  var viewModel = {};
+  viewModel.getVisitedData = function  () {
+    var locations = [
+      { title: '公司', location: { lat: 39.9653473, lng: 116.27073879999999 } },
+      { title: 'www', location: { lat: 39.9553473, lng: 116.29073879999999 } },
+      { title: 'ddd', location: { lat: 39.9253473, lng: 116.37073879999999 } },
+      { title: 'xxx', location: { lat: 39.9180628, lng: 116.3961237 } }
+    ];
+    return locations;
+  }
+
+  var $map, $modalDelComfirm, $modalSetting, $modalRecordPos, $modalSearch, $spinner, $serachType;
   var app = {};
-  var $map, $modalDelComfirm, $modalSetting, $modalRecordPos, $modalSearch, $spinner;
+
+  // 加载基本资源
   app.init = function() {
     return new Promise(function(resolve, reject) {
+      // 获取网络状态
+
+      // 获取原始数据
+      var visitedList = localStorage.getItem("visitedList");
+      var wishList = localStorage.getItem("wishList");
+      var mapSet = localStorage.getItem("mapSet");
 
       requirejs(["knockout", "jquery", "underscore", "bootstrap"], function(ko) {
-        $map = $("#map"); 
-        $modalDelComfirm = $("#del-comfirm"); 
+        $map = $("#map");
+        $modalDelComfirm = $("#del-comfirm");
         $modalSetting = $("#setting");
-        $modalRecordPos = $("#record-pos"); 
-        $modalSearch = $("search"); 
+        $modalRecordPos = $("#record-pos");
+        $modalSearch = $("#search");
         $spinner = $("#loader");
+        $serachType = $("#search-type");
+        $spinner= $(".loader");
 
         // view model
         var viewModel = {
@@ -42,11 +63,11 @@
             lat: ko.observable(),
             lng: ko.observable()
           },
-          setting: {
+          mapSet: {
             range: ko.observable(300),
             keyWords: ko.observable("")
           },
-          planList: ko.observableArray([]),
+          wishList: ko.observableArray([]),
           visitedPos: ko.observableArray([
             /*{
               id: "xxx",
@@ -59,121 +80,254 @@
             }*/
           ])
         };
+        // $modalSetting.modal("show");
+        // app.showMapView();
         resolve();
       }, function(err) {
         console.error("err:", err);
-        reject(Error("It broke", err));
+        reject(Error("init fail", err));
       });
     });
   };
 
-  app.initMap = function() {
-    var getCurrentPos = function() {
-      return new Promise(function(resolve, reject) {
-        // Try HTML5 geolocation.
-        if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(function(position) {
-            var pos = {
-              lat: position.coords.latitude,
-              lng: position.coords.longitude
-            };
+  var mapView = {};
 
-            resolve(pos);
-          }, function() {
-            reject("Get Geolocation fail");
-          });
-        } else {
-          // Browser doesn't support Geolocation
-          reject("Browser doesn't support Geolocation");
-        }
-      });
-    };
+  mapView.markers = [];
 
-    var getLocations = function(pos) {
-      return new Promise(function(resolve, reject) {
-        resolve({
-          "pos": pos,
-          "locations": [
-            { title: 'Park Ave Penthouse', location: { lat: 40.7713024, lng: -73.9632393 } },
-            { title: 'Chelsea Loft', location: { lat: 40.7444883, lng: -73.9949465 } },
-            { title: 'Union Square Open Floor Plan', location: { lat: 40.7347062, lng: -73.9895759 } },
-            { title: 'East Village Hip Studio', location: { lat: 40.7281777, lng: -73.984377 } },
-            { title: 'TriBeCa Artsy Bachelor Pad', location: { lat: 40.7195264, lng: -74.0089934 } },
-            { title: 'Chinatown Homey Space', location: { lat: 40.7180628, lng: -73.9961237 } }
-          ]
+  mapView.getCenterPosition = function() {
+    return new Promise(function(resolve, reject) {
+      // Try HTML5 geolocation.
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+          var pos = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          };
+          resolve(pos);
+        }, function() {
+          reject(false);
         });
-      });
-    };
+      } else {
+        // Browser doesn't support Geolocation
+        reject(false);
+      }
+    });
+  };
 
-    var drawMap = function(data) {
+  mapView.showMap = function(currentPosition) {
+    if (mapView.map) {
+      map.setCenter(currentPosition);
+      map.setZoom(15);
+      mapView.centerMarker.setPosition(currentPosition);
+
+    } else {
       return new Promise(function(resolve, reject) {
         requirejs(["googlemap"], function() {
-          var map;
+          var styles = [{ featureType: 'water', stylers: [{ color: '#19a0d8' }] }, { featureType: 'administrative', elementType: 'labels.text.stroke', stylers: [{ color: '#ffffff' }, { weight: 6 }] }, { featureType: 'administrative', elementType: 'labels.text.fill', stylers: [{ color: '#e85113' }] }, { featureType: 'road.highway', elementType: 'geometry.stroke', stylers: [{ color: '#efe9e4' }, { lightness: -40 }] }, { featureType: 'transit.station', stylers: [{ weight: 9 }, { hue: '#e85113' }] }, { featureType: 'road.highway', elementType: 'labels.icon', stylers: [{ visibility: 'off' }] }, { featureType: 'water', elementType: 'labels.text.stroke', stylers: [{ lightness: 100 }] }, { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ lightness: -100 }] }, { featureType: 'poi', elementType: 'geometry', stylers: [{ visibility: 'on' }, { color: '#f0e4d3' }] }, { featureType: 'road.highway', elementType: 'geometry.fill', stylers: [{ color: '#efe9e4' }, { lightness: -25 }] }];
+          mapView.map = new google.maps.Map(document.getElementById('map'), {
+            center: currentPosition,
+            zoom: 15,
+            styles: styles,
+            mapTypeControl: false
+          });
 
-          // Create a new blank array for all the listing markers.
-          var markers = [];
+          // This autocomplete is for use in the search within time entry box.
+          mapView.centerAutocomplete = new google.maps.places.Autocomplete(document.getElementById('set-center'));
 
-          // This global polygon variable is to ensure only ONE polygon is rendered.
-          var polygon = null;
+          mapView.largeInfowindow = new google.maps.InfoWindow();
+          mapView.largeInfowindow.addListener('closeclick', function() {
+            this.marker = null;
+            console.log("infowindow set null");
+          });
 
-          // Create placemarkers array to use in multiple functions to have control
-          // over the number of places that show.
-          var placeMarkers = [];
-
-          function initMap() {
-
-            // Constructor creates a new map - only center and zoom are required.
-            map = new google.maps.Map(document.getElementById('map'), {
-              center: data.pos,
-              zoom: 13,
-              // styles: styles,
-              mapTypeControl: false
-            });
-
-            // These are the real estate listings that will be shown to the user.
-            // Normally we'd have these in a database instead.
-            var locations = data.locations;
-
+          // This function takes in a COLOR, and then creates a new marker
+          // icon of that color. The icon will be 21 px wide by 34 high, have an origin
+          // of 0, 0 and be anchored at 10, 34).
+          function makeMarkerIcon(markerColor) {
+            var markerImage = new google.maps.MarkerImage(
+              'http://chart.googleapis.com/chart?chst=d_map_spin&chld=1.15|0|' + markerColor +
+              '|40|_|%E2%80%A2',
+              new google.maps.Size(21, 34),
+              new google.maps.Point(0, 0),
+              new google.maps.Point(10, 34),
+              new google.maps.Size(21, 34));
+            return markerImage;
           }
 
-          initMap();
-          console.log("Stuff worked1!");
-          resolve("Stuff worked1!");
+          // Style the markers a bit. This will be our listing marker icon.
+          mapView.defaultIcon = makeMarkerIcon('0091ff');
+
+          // Create a "highlighted location" marker color for when the user
+          // mouses over the marker.
+          mapView.highlightedIcon = makeMarkerIcon('FFFF24');
+
+          mapView.createMarker = function(place, label) {
+            var position = place.geometry.location;
+            // Create a marker per location, and put into markers array.
+            var marker = new google.maps.Marker({
+              position: position,
+              title: place.name,
+              // animation: google.maps.Animation.DROP,
+              // icon: mapView.defaultIcon,
+              label: label.toString()
+            });
+            marker.addListener('click', function() {
+              mapView.populateInfoWindow(this, mapView.largeInfowindow, place);
+            });
+
+            // // Two event listeners - one for mouseover, one for mouseout,
+            // // to change the colors back and forth.
+            // marker.addListener('mouseover', function() {
+            //   this.setIcon(mapView.highlightedIcon);
+            // });
+            // marker.addListener('mouseout', function() {
+            //   this.setIcon(mapView.defaultIcon);
+            // });
+            return marker;
+          };
+
+          // This function will loop through the markers array and display them all.
+          function showMarkers(markers) {
+            for (var i = 0; i < markers.length; i++) {
+              markers[i].setMap(mapView.map);
+            }
+          }
+
+          // This function will loop through the listings and hide them all.
+          mapView.hideMarkers = function (markers) {
+            for (var i = 0; i < markers.length; i++) {
+              markers[i].setMap(null);
+            }
+          }
+
+          function isInfoWindowOpen(infoWindow){
+              var map = infoWindow.getMap();
+              return (map !== null && typeof map !== "undefined");
+          }
+
+
+          // This function populates the infowindow when the marker is clicked. We'll only allow
+          // one infowindow which will open at the marker that is clicked, and populate based
+          // on that markers position.
+          mapView.populateInfoWindow = function(marker, infowindow, place) {
+            // Check to make sure the infowindow is not already opened on this marker.
+            if (infowindow.marker != marker) {
+              // Clear the infowindow content to give the streetview time to load.
+              infowindow.setContent('');
+              infowindow.marker = marker;
+              // Make sure the marker property is cleared if the infowindow is closed.
+
+              var ctx = "";
+              ctx += '<div>' + marker.title + '</div><div>地址:' + place.vicinity + '</div>';
+              if (place.photos && place.photos.length > 0) {
+                ctx += '<div><img src="' + place.photos[0].getUrl({ 'maxWidth': 100, 'maxHeight': 100 }) + '"/></div>'
+              }
+              ctx += '<div onclick="console.log(this)">记录地点</div>'
+              infowindow.setContent(ctx);
+
+              infowindow.open(map, marker);
+            }
+          }
+          mapView.geocoder = new google.maps.Geocoder();
+          mapView.placesService = new google.maps.places.PlacesService(mapView.map);
+
+          function searchNearby () {
+            var serachType = [];
+            serachType.push($serachType.val());
+            var searchOption = {
+              bounds: mapView.map.getBounds(),
+              types: serachType
+            };
+            mapView.placesService.nearbySearch(searchOption, function(results, status) {
+              if (status == google.maps.places.PlacesServiceStatus.OK) {
+                mapView.hideMarkers(mapView.markers);
+                mapView.markers = [];
+                for (var i = 0; i < results.length; i++) {
+                  mapView.markers.push(mapView.createMarker(results[i], i));
+                }
+                showMarkers(mapView.markers);
+              }
+            });
+          }
+
+          mapView.map.addListener('idle', searchNearby);
+          $modalSetting.on("hidden.bs.modal", searchNearby);
+
+          mapView.centerMarker = new google.maps.Marker({
+            position: currentPosition,
+            title: "我的位置",
+            animation: google.maps.Animation.BOUNCE,
+            icon: mapView.defaultIcon,
+            map: mapView.map
+          });
+
+          // Two event listeners - one for mouseover, one for mouseout,
+          // to change the colors back and forth.
+          mapView.centerMarker.addListener('mouseover', function() {
+            this.setIcon(mapView.highlightedIcon);
+          });
+          mapView.centerMarker.addListener('mouseout', function() {
+            this.setIcon(mapView.defaultIcon);
+          });
+
+          resolve(mapView.map);
         }, function(err) {
-          console.log("It broke1");
-          reject(Error("It broke1"));
+          reject("load google map fail");
         });
       });
-    };
-
-    return getCurrentPos().then(getLocations).then(drawMap);
+    }
   };
 
-  app.startLoad = function() {
-    return new Promise(function(resolve, reject) {
-      if (app.spinner) {
-        app.spinner.removeAttr("hidden");
+  mapView.showVisitedPlace = function () {
+    return new Promise(function  (resolve, reject) {
+      // 获取数据
+      var locations = viewModel.getVisitedData();
+
+      // 重新创建标记
+      mapView.visitedMarkers = mapView.visitedMarkers || [];
+      mapView.hideMarkers(mapView.visitedMarkers);
+      mapView.visitedMarkers = [];
+      for (var i = 0, marker; i < locations.length; i++) {
+        marker = new google.maps.Marker({
+          position: locations[i].location,
+          title: locations[i].title,
+          animation: google.maps.Animation.DROP,
+          icon: mapView.highlightedIcon,
+          map: mapView.map
+        });
+        mapView.visitedMarkers.push(marker);
       }
-      resolve();
+      resolve(mapView.map);
     });
   };
 
-  app.endLoad = function() {
+  app.startLoad = function(data) {
     return new Promise(function(resolve, reject) {
-      app.spinner.attr("hidden", "");
-      resolve();
+      if ($spinner) {
+        $spinner.removeAttr("hidden");
+      }
+      resolve(data);
     });
   };
 
-  // app.startLoad()
-  //   .then(app.init)
-  //   .then(app.initMap)
-  //   .then(app.endLoad)
-  //   .then(function(result) {
-  //     console.log(result);
-  //   }, function(err) {
-  //     console.log(err);
-  //   });
-  app.init();
+  app.endLoad = function(data) {
+    return new Promise(function(resolve, reject) {
+      $spinner.attr("hidden", "");
+      resolve(data);
+    });
+  };
+
+  app.init()
+    .then(app.startLoad)
+    .then(mapView.getCenterPosition)
+    .catch(function(pos) { // 如果获取不到当前位置, 则使用默认位置
+      return { lat: 39.9653473, lng: 116.27073879999999 };
+    })
+    .then(mapView.showMap)
+    .then(mapView.showVisitedPlace)
+    .catch(function (err) {
+      console.error(err);
+    })
+    .then(app.endLoad);
   window.app = app;
 }());

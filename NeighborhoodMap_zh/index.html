@@ -16,7 +16,7 @@
       <h4 data-bind="text:title">目的地列表</h4>
       <div class="ml-auto" style="margin-right: 1rem;color: rgba(255, 255, 255, 0.71);">
         <i class="fa fa-home" aria-hidden="true" style="padding-right: 1rem;"></i>
-        <i class="fa fa-cog" aria-hidden="true"></i></div>
+        <i class="fa fa-cog" aria-hidden="true" data-toggle="modal" data-target="#setting"></i></div>
     </div>
   </header>
   <main class="main">
@@ -32,10 +32,13 @@
         </div>
       </div>
     </div>
-    <div class="container-fluid height-100" hidden>
+    <div class="container-fluid height-100">
       <div class="row no-gutters align-items-start height-100">
         <div class="col height-100" >
           <!--地图模式-->
+            <div class="form-group" style="position: absolute; width: 100%; z-index: 10;"> 
+              <input type="text" class="form-control" id="set-center" placeholder="转移到该地点附近查找">
+            </div>
           <div id="map" class="height-100" ></div>
         </div>
       </div>
@@ -98,16 +101,45 @@
       <div class="modal-dialog" role="document" style="margin-top: 100px;">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="exampleModalLabel">设置</h5>
+            <h5 class="modal-title" id="exampleModalLabel">搜索设置</h5>
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
               <span aria-hidden="true">&times;</span>
             </button>
           </div>
           <div class="modal-body">
-            <div>设置, 搜索范围, 搜索关键字, 显示数量</div>
+            <div>类型:</div>
+            <div>
+              <select class="form-control" id="search-type">
+                <option value="art_gallery">美术馆</option>
+                <option value="bar">酒吧</option>
+                <option value="cafe">咖啡厅</option>
+                <option value="museum">博物馆</option>
+                <option value="park">公园</option>
+              </select>
+            </div>
+            <!-- <hr>
+            <div class="text">查找范围:</div>
+            <div class="form-group row">
+              <div class="col-6">
+                <select class="form-control" id="max-duration">
+                  <option value="10">10 分钟</option>
+                  <option value="15">15 分钟</option>
+                  <option value="30">30 分钟</option>
+                  <option value="60">1 小时</option>
+                </select>
+              </div>
+                <div class="col-6">
+                <select class="form-control" id="mode">
+                  <option value="DRIVING">开车</option>
+                  <option value="WALKING">走路</option>
+                  <option value="BICYCLING">自行车</option>
+                  <option value="TRANSIT">公共交通</option>
+                </select>
+              </div>
+            </div> -->
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-primary" data-dismiss="modal">关闭</button>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
           </div>
         </div>
       </div>

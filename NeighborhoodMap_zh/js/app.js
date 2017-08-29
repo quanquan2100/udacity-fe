@@ -34,6 +34,7 @@
       var searchList = [];
 
       var vm = {
+        view: ko.observable("main"),
         centerLocation: {
           lat: ko.observable(centerPlace.lat),
           lng: ko.observable(centerPlace.lng)
@@ -61,6 +62,9 @@
     viewModel.centerLocation.lng(centerPlace.lng);
     localStorage.setItem("centerPlace", JSON.stringify(centerPlace));
   }
+  viewModel.addWishPlace = function(data){
+    console.log(data);
+  };
   // ---- viewModel end --------------------------------------------------------
   // ---- main view begin --------------------------------------------------------
 
@@ -181,18 +185,18 @@
           };
 
           // This function will loop through the markers array and display them all.
-          function showMarkers(markers) {
+          mapView.showMarkers = function (markers) {
             for (var i = 0; i < markers.length; i++) {
               markers[i].setMap(mapView.map);
             }
-          }
+          };
 
           // This function will loop through the listings and hide them all.
           mapView.hideMarkers = function(markers) {
             for (var i = 0; i < markers.length; i++) {
               markers[i].setMap(null);
             }
-          }
+          };
 
           function isInfoWindowOpen(infoWindow) {
             var map = infoWindow.getMap();
@@ -206,43 +210,35 @@
           mapView.populateInfoWindow = function(marker, infowindow, place) {
             // Check to make sure the infowindow is not already opened on this marker.
             if (infowindow.marker != marker) {
+              if (!place || !place.geometry) {
+                return;
+              }
               // Clear the infowindow content to give the streetview time to load.
               infowindow.setContent('');
               infowindow.marker = marker;
               // Make sure the marker property is cleared if the infowindow is closed.
-
               var ctx = "";
               ctx += '<div>' + marker.title + '</div><div>地址:' + place.vicinity + '</div>';
               if (place.photos && place.photos.length > 0) {
                 ctx += '<div><img src="' + place.photos[0].getUrl({ 'maxWidth': 100, 'maxHeight': 100 }) + '"/></div>'
               }
-              ctx += '<div onclick="console.log(this)">记录地点</div>'
+              ctx += '<div><a id="record-pos-button" href="javascript:void(0);"  onclick="app.openRecordModal(this);">添加记录</a></div>'
+              ctx += '<div><a id="wish-pos-button" href="javascript:void(0);"  onclick="app.add2WishList(this);">添加心愿单</a></div>'
               infowindow.setContent(ctx);
-
               infowindow.open(map, marker);
+              $("#record-pos-button").attr("data-place-id", place.place_id)
+                .attr("data-name", place.name)
+                .attr("data-vicinity", place.vicinity)
+                .attr("data-location", place.geometry.location.toString());
+              $("#wish-pos-button").attr("data-place-id", place.place_id)
+                .attr("data-name", place.name)
+                .attr("data-vicinity", place.vicinity)
+                .attr("data-location", place.geometry.location.toString());
             }
           }
           mapView.geocoder = new google.maps.Geocoder();
           mapView.placesService = new google.maps.places.PlacesService(mapView.map);
 
-          mapView.searchNearby = function() {
-            var serachType = [];
-            serachType.push($serachType.val());
-            var searchOption = {
-              bounds: mapView.map.getBounds(),
-              types: serachType
-            };
-            mapView.placesService.nearbySearch(searchOption, function(results, status) {
-              if (status == google.maps.places.PlacesServiceStatus.OK) {
-                mapView.hideMarkers(mapView.markers);
-                mapView.markers = [];
-                for (var i = 0; i < results.length; i++) {
-                  mapView.markers.push(mapView.createMarker(results[i], i));
-                }
-                showMarkers(mapView.markers);
-              }
-            });
-          };
 
           mapView.map.addListener('idle', mapView.searchNearby);
           $modalSetting.on("hidden.bs.modal", mapView.searchNearby);
@@ -270,6 +266,30 @@
         });
       });
     }
+  };
+
+  mapView.searchNearby = function() {
+    return new Promise(function(resolve, reject){
+      var serachType = [];
+      serachType.push($serachType.val());
+      var searchOption = {
+        bounds: mapView.map.getBounds(),
+        types: serachType
+      };
+      mapView.placesService.nearbySearch(searchOption, function(results, status) {
+        if (status == google.maps.places.PlacesServiceStatus.OK) {
+          mapView.hideMarkers(mapView.markers);
+          mapView.markers = [];
+          for (var i = 0; i < results.length; i++) {
+            mapView.markers.push(mapView.createMarker(results[i], i));
+          }
+          mapView.showMarkers(mapView.markers);
+          resolve();
+        } else {
+          reject("未查询到匹配地点, 你可以移动地图或缩放地图试试");
+        }
+      });              
+    });
   };
 
   mapView.showVisitedPlace = function() {
@@ -410,8 +430,8 @@
           $("[data-target='#setting']").removeAttr("hidden");
           $("[data-target='#serach-place-list']").removeAttr("hidden");
         })
-        .then(mapView.getCenterPosition)
-        .catch(function(pos) { // 如果获取不到当前位置, 则使用默认位置
+        // .then(mapView.getCenterPosition)
+        .then(function(pos) { // 如果获取不到当前位置, 则使用默认位置
           return { lat: 39.9653473, lng: 116.27073879999999 };
         })
         .then(mapView.showMap)
@@ -468,6 +488,22 @@
           reject();
         });
     });
+  };
+
+  // 打开地点记录对话框
+  app.openRecordModal = function(ele) {
+    var $ele = $(ele);
+    $modalRecordPos.modal("show");
+  };
+
+  app.add2WishList = function (ele) {
+    var $ele = $(ele);
+    var data = {};
+    data.place_id = $ele.attr("data-place-id");
+    data.name = $ele.attr("data-name");
+    data.vicinity = $ele.attr("data-vicinity");
+    data.location = $ele.attr("data-location");
+    viewModel.addWishPlace(data);
   };
 
   app.init().then(viewModel.init);

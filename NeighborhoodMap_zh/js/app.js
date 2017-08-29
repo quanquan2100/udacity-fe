@@ -2,26 +2,52 @@
   // 常量
   var MAP_APP_KEY = "AIzaSyAjkLBg_PHjw5O4h8S9tAc_iSojq4BKA9s";
 
-  // config require
-  requirejs.config({
-    baseUrl: "/bower_components",
-    paths: {
-      jquery: "jquery/dist/jquery.min",
-      bootstrap: "bootstrap/dist/js/bootstrap.min",
-      knockout: "knockout/dist/knockout",
-      underscore: "underscore/underscore",
-      tether: "tether/dist/js/tether", // 由于 bootstrap 使用其全局变量, 导致不适用于 require.
-      googlemap: "https://maps.googleapis.com/maps/api/js?libraries=places,geometry,drawing&key=" + MAP_APP_KEY + "&v=3&callback=define"
-    },
-    shim: {
-      bootstrap: {
-        deps: ['jquery']
-      }
-    }
-  });
+  var $map, $modalDelComfirm, $modalSetting, $modalRecordPos, $modalSearch, $spinner, $serachType, $viewMap, $viewHome, $viewList;
+  var app = {};
 
+
+  // ---- viewModel begin --------------------------------------------------------
   var viewModel = {};
-  viewModel.getVisitedData = function  () {
+  viewModel.init = function(ko) {
+    return new Promise(function (resolve, reject) {
+      var visitedList = localStorage.getItem("visitedList");
+      if (!visitedList) {
+        visitedList = [];
+        localStorage.setItem("visitedList", "[]");
+      } else {
+        visitedList = JSON.parse(visitedList);
+      }
+      var wishList =  localStorage.getItem("wishList");
+      if (!wishList) {
+        wishList = [];
+        localStorage.setItem("wishList", "[]");
+      } else {
+        wishList = JSON.parse(wishList);
+      }
+      var centerPlace = localStorage.getItem("centerPlace");
+      if (!centerPlace) {
+        centerPlace = { "lat": 39.9653473, "lng": 116.27073879999999 };
+        localStorage.setItem("centerPlace", '{ "lat": 39.9653473, "lng": 116.27073879999999 }');
+      } else {
+        centerPlace = JSON.parse(centerPlace);
+      }
+      var searchList = [];
+
+      var vm = {
+        centerLocation: {
+          lat: ko.observable(centerPlace.lat),
+          lng: ko.observable(centerPlace.lng)
+        },
+        wishList: ko.observableArray(wishList),
+        visitedList: ko.observableArray(visitedList),
+        searchList: ko.observableArray(searchList)
+      };
+      viewModel.vm = vm;
+      resolve(vm);
+    });
+  };
+  viewModel.getVisitedData = function() {
+    return viewModel.vm.visitedList();
     var locations = [
       { title: '公司', location: { lat: 39.9653473, lng: 116.27073879999999 } },
       { title: 'www', location: { lat: 39.9553473, lng: 116.29073879999999 } },
@@ -29,73 +55,32 @@
       { title: 'xxx', location: { lat: 39.9180628, lng: 116.3961237 } }
     ];
     return locations;
-  }
-
-  var $map, $modalDelComfirm, $modalSetting, $modalRecordPos, $modalSearch, $spinner, $serachType, $viewMap, $viewHome, $viewList;
-  var app = {};
-
-  // 加载基本资源
-  app.init = function() {
-    return new Promise(function(resolve, reject) {
-      // 获取网络状态
-
-      // 获取原始数据
-      var visitedList = localStorage.getItem("visitedList");
-      var wishList = localStorage.getItem("wishList");
-      var mapSet = localStorage.getItem("mapSet");
-
-      requirejs(["knockout", "jquery", "underscore", "bootstrap"], function(ko) {
-        $map = $("#map");
-        $modalDelComfirm = $("#del-comfirm");
-        $modalSetting = $("#setting");
-        $modalRecordPos = $("#record-pos");
-        $modalSearch = $("#search");
-        $spinner = $("#loader");
-        $serachType = $("#search-type");
-        $spinner= $(".loader");
-        $viewMap = $("#view-map"); 
-        $viewHome = $("#view-home"); 
-        $viewList = $("#view-list");
-
-        // view model
-        var viewModel = {
-          title: ko.observable(""),
-          view: ko.observable("main"),
-          tags: ko.observableArray([]),
-          centerLocation: {
-            lat: ko.observable(),
-            lng: ko.observable()
-          },
-          mapSet: {
-            range: ko.observable(300),
-            keyWords: ko.observable("")
-          },
-          wishList: ko.observableArray([]),
-          visitedPos: ko.observableArray([
-            /*{
-              id: "xxx",
-              title: 'Park Ave Penthouse',
-              location: { lat: 40.7713024, lng: -73.9632393 },
-              like: false,
-              date: 2222222,
-              comment: "",
-              tags: ko.observableArray(["tag1"])
-            }*/
-          ])
-        };
-        // $modalSetting.modal("show");
-        // app.showMapView();
-        resolve();
-      }, function(err) {
-        console.error("err:", err);
-        reject(Error("init fail", err));
-      });
-    });
   };
+  viewModel.setCenterPlace = function (centerPlace) {
+    viewModel.centerLocation.lat(centerPlace.lat);
+    viewModel.centerLocation.lng(centerPlace.lng);
+    localStorage.setItem("centerPlace", JSON.stringify(centerPlace));
+  }
+  // ---- viewModel end --------------------------------------------------------
+  // ---- main view begin --------------------------------------------------------
+
+  var mainView = {};
+
+  app.mainView = mainView;
+  // ---- main view end --------------------------------------------------------
+  // ---- list view begin --------------------------------------------------------
+
+  var listView = {};
+
+  app.listView = listView; 
+
+  // ---- list view end --------------------------------------------------------
+  // ---- map view begin --------------------------------------------------------
 
   var mapView = {};
 
   mapView.markers = [];
+  mapView.visitedMarkers = [];
 
   mapView.getCenterPosition = function() {
     return new Promise(function(resolve, reject) {
@@ -119,9 +104,10 @@
 
   mapView.showMap = function(currentPosition) {
     if (mapView.map) {
-      map.setCenter(currentPosition);
-      map.setZoom(15);
+      mapView.map.setCenter(currentPosition);
+      mapView.map.setZoom(15);
       mapView.centerMarker.setPosition(currentPosition);
+      mapView.centerMarker.setMap(mapView.map);
 
     } else {
       return new Promise(function(resolve, reject) {
@@ -129,26 +115,26 @@
           var styles = [{ featureType: 'water', stylers: [{ color: '#19a0d8' }] }, { featureType: 'administrative', elementType: 'labels.text.stroke', stylers: [{ color: '#ffffff' }, { weight: 6 }] }, { featureType: 'administrative', elementType: 'labels.text.fill', stylers: [{ color: '#e85113' }] }, { featureType: 'road.highway', elementType: 'geometry.stroke', stylers: [{ color: '#efe9e4' }, { lightness: -40 }] }, { featureType: 'transit.station', stylers: [{ weight: 9 }, { hue: '#e85113' }] }, { featureType: 'road.highway', elementType: 'labels.icon', stylers: [{ visibility: 'off' }] }, { featureType: 'water', elementType: 'labels.text.stroke', stylers: [{ lightness: 100 }] }, { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ lightness: -100 }] }, { featureType: 'poi', elementType: 'geometry', stylers: [{ visibility: 'on' }, { color: '#f0e4d3' }] }, { featureType: 'road.highway', elementType: 'geometry.fill', stylers: [{ color: '#efe9e4' }, { lightness: -25 }] }];
           mapView.map = new google.maps.Map(document.getElementById('map'), {
             center: currentPosition,
-            zoom: 16,
+            zoom: 15,
             styles: styles,
             mapTypeControl: false
           });
 
           // This autocomplete is for use in the search within time entry box.
           mapView.centerAutocomplete = new google.maps.places.Autocomplete(document.getElementById('set-center'), {
-            componentRestrictions: {country: 'cn'}
+            componentRestrictions: { country: 'cn' }
           });
-          mapView.centerAutocomplete.addListener('place_changed', function(){
+          mapView.centerAutocomplete.addListener('place_changed', function() {
             mapView.largeInfowindow.close();
             var place = this.getPlace();
-              if (!place.geometry) {
+            if (!place.geometry) {
               // User entered the name of a Place that was not suggested and
               // pressed the Enter key, or the Place Details request failed.
-              window.alert("No details available for input: '" + place.name + "'");
+              window.alert("需要选择列表中的具体地点哦");
               return;
             }
             mapView.map.setCenter(place.geometry.location);
-            mapView.map.setZoom(17); 
+            mapView.map.setZoom(17);
           });
 
           mapView.largeInfowindow = new google.maps.InfoWindow();
@@ -191,14 +177,6 @@
               mapView.populateInfoWindow(this, mapView.largeInfowindow, place);
             });
 
-            // // Two event listeners - one for mouseover, one for mouseout,
-            // // to change the colors back and forth.
-            // marker.addListener('mouseover', function() {
-            //   this.setIcon(mapView.highlightedIcon);
-            // });
-            // marker.addListener('mouseout', function() {
-            //   this.setIcon(mapView.defaultIcon);
-            // });
             return marker;
           };
 
@@ -210,15 +188,15 @@
           }
 
           // This function will loop through the listings and hide them all.
-          mapView.hideMarkers = function (markers) {
+          mapView.hideMarkers = function(markers) {
             for (var i = 0; i < markers.length; i++) {
               markers[i].setMap(null);
             }
           }
 
-          function isInfoWindowOpen(infoWindow){
-              var map = infoWindow.getMap();
-              return (map !== null && typeof map !== "undefined");
+          function isInfoWindowOpen(infoWindow) {
+            var map = infoWindow.getMap();
+            return (map !== null && typeof map !== "undefined");
           }
 
 
@@ -247,7 +225,7 @@
           mapView.geocoder = new google.maps.Geocoder();
           mapView.placesService = new google.maps.places.PlacesService(mapView.map);
 
-          mapView.searchNearby =  function  () {
+          mapView.searchNearby = function() {
             var serachType = [];
             serachType.push($serachType.val());
             var searchOption = {
@@ -294,13 +272,12 @@
     }
   };
 
-  mapView.showVisitedPlace = function () {
-    return new Promise(function  (resolve, reject) {
+  mapView.showVisitedPlace = function() {
+    return new Promise(function(resolve, reject) {
       // 获取数据
       var locations = viewModel.getVisitedData();
 
       // 重新创建标记
-      mapView.visitedMarkers = mapView.visitedMarkers || [];
       mapView.hideMarkers(mapView.visitedMarkers);
       mapView.visitedMarkers = [];
       for (var i = 0, marker; i < locations.length; i++) {
@@ -317,17 +294,94 @@
     });
   };
 
-  mapView.loadErrorView = function(data){
-    return new Promise (function(resolve, reject){
+  mapView.loadErrorView = function(data) {
+    return new Promise(function(resolve, reject) {
       $viewMap.find("#view-map-main").attr("hidden", "hidden");
       $viewMap.find("#view-map-main-error").removeAttr("hidden");
       resolve(data);
     });
   };
 
+  mapView.clearMarks = function() {
+    return new Promise(function(resolve, reject) {
+      if (mapView.centerMarker) {
+        mapView.centerMarker.setMap(null);
+      }
+      if (mapView.hideMarkers) {
+        mapView.hideMarkers(mapView.markers);
+        mapView.hideMarkers(mapView.visitedMarkers);
+        mapView.markers = [];
+        mapView.visitedMarkers = [];
+      }
+    });
+  };
+
   app.mapView = mapView;
+
+  // ---- map view end --------------------------------------------------------
+  
+  // 加载基本资源
+  app.init = function() {
+    return new Promise(function(resolve, reject) {
+      requirejs.config({
+        baseUrl: "/bower_components",
+        paths: {
+          jquery: "jquery/dist/jquery.min",
+          bootstrap: "bootstrap/dist/js/bootstrap.min",
+          knockout: "knockout/dist/knockout",
+          underscore: "underscore/underscore",
+          tether: "tether/dist/js/tether", // 由于 bootstrap 使用其全局变量, 导致不适用于 require.
+          googlemap: "https://maps.googleapis.com/maps/api/js?libraries=places,geometry,drawing&key=" + MAP_APP_KEY + "&v=3&callback=define"
+        },
+        shim: {
+          bootstrap: {
+            deps: ['jquery']
+          }
+        }
+      });
+
+      requirejs(["knockout", "jquery", "underscore", "bootstrap"], function(ko) {
+        $map = $("#map");
+        $modalDelComfirm = $("#del-comfirm");
+        $modalSetting = $("#setting");
+        $modalRecordPos = $("#record-pos");
+        $modalSearch = $("#search");
+        $spinner = $("#loader");
+        $serachType = $("#search-type");
+        $spinner = $(".loader");
+        $viewMap = $("#view-map");
+        $viewHome = $("#view-home");
+        $viewList = $("#view-list");
+
+        $(".menu .fa-list-alt").on("click", function(e) {
+          app.showListView();
+        });
+
+        $(".menu .fa-map-o").on("click", function(e) {
+          app.showMapView();
+        });
+
+        $("header .fa-home").on("click", function(e) {
+          mapView.clearMarks()
+            .then(app.showMainView());
+        });
+
+        $viewMap.find(".fa-refresh").on("click", function(e) {
+          app.showMapView();
+        });
+
+        resolve(ko);
+      }, function(err) {
+        console.error("err:", err);
+        reject(Error("init fail", err));
+      });
+    });
+  };
+
+  // 开始转圈
   app.startLoad = function(data) {
     return new Promise(function(resolve, reject) {
+      $("#set-center").attr("disabled", "disabled");
       if ($spinner) {
         $spinner.removeAttr("hidden");
       }
@@ -335,22 +389,87 @@
     });
   };
 
+  // 结束转圈
   app.endLoad = function(data) {
     return new Promise(function(resolve, reject) {
+      $("#set-center").removeAttr("disabled");
       $spinner.attr("hidden", "");
       resolve(data);
     });
   };
 
-  app.init()
-    .then(app.startLoad)
-    .then(mapView.getCenterPosition)
-    .catch(function(pos) { // 如果获取不到当前位置, 则使用默认位置
-      return { lat: 39.9653473, lng: 116.27073879999999 };
-    })
-    .then(mapView.showMap)
-    .then(mapView.showVisitedPlace)
-    .catch(mapView.loadErrorView)
-    .then(app.endLoad);
+  // 显示地图视口
+  app.showMapView = function() {
+    return new Promise(function(resolve, reject) {
+      app.startLoad()
+        .then(function() {
+          $viewMap.removeAttr("hidden");
+          $viewHome.attr("hidden", "hidden");
+          $viewList.attr("hidden", "hidden");
+          $(".header .fa-home").removeAttr("hidden");
+          $("[data-target='#setting']").removeAttr("hidden");
+          $("[data-target='#serach-place-list']").removeAttr("hidden");
+        })
+        .then(mapView.getCenterPosition)
+        .catch(function(pos) { // 如果获取不到当前位置, 则使用默认位置
+          return { lat: 39.9653473, lng: 116.27073879999999 };
+        })
+        .then(mapView.showMap)
+        .then(mapView.showVisitedPlace)
+        .catch(mapView.loadErrorView)
+        .then(app.endLoad)
+        .then(function() {
+          resolve();
+        }).catch(function() {
+          reject();
+        });
+    });
+  };
+
+  // 显示主视口
+  app.showMainView = function() {
+    return new Promise(function(resolve, reject) {
+      app.startLoad()
+        .then(function () {
+          $viewHome.removeAttr("hidden");
+          $viewMap.attr("hidden", "hidden");
+          $viewList.attr("hidden", "hidden");
+          $(".header .fa-home").attr("hidden", "hidden");
+          $("[data-target='#setting']").attr("hidden", "hidden");
+          $("[data-target='#serach-place-list']").attr("hidden", "hidden");
+        })
+        .then(app.endLoad)
+        .then(function () {
+          resolve();
+        })
+        .catch(function () {
+          reject();
+        });
+    });
+  };
+
+  // 显示列表视口
+  app.showListView = function() {
+    return new Promise(function(resolve, reject) {
+      app.startLoad()
+        .then(function () {
+          $viewList.removeAttr("hidden");
+          $viewMap.attr("hidden", "hidden");
+          $viewHome.attr("hidden", "hidden");
+          $(".header .fa-home").removeAttr("hidden");
+          $("[data-target='#setting']").attr("hidden", "hidden");
+          $("[data-target='#serach-place-list']").attr("hidden", "hidden");
+        })
+        .then(app.endLoad)
+        .then(function () {
+          resolve();
+        })
+        .catch(function () {
+          reject();
+        });
+    });
+  };
+
+  app.init().then(viewModel.init);
   window.app = app;
 }());

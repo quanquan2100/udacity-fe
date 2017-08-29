@@ -14,13 +14,15 @@
   <header class="header">
     <div class="d-flex flex-row" style="width: 100%;">
       <h4 data-bind="text:title">目的地列表</h4>
-      <div class="ml-auto" style="margin-right: 1rem;color: rgba(255, 255, 255, 0.71);">
-        <i class="fa fa-home" aria-hidden="true" style="padding-right: 1rem;"></i>
-        <i class="fa fa-cog" aria-hidden="true" data-toggle="modal" data-target="#setting"></i></div>
+      <div class="ml-auto" style="color: rgba(255, 255, 255, 0.71);">
+        <i class="fa fa-home" aria-hidden="true" style="padding-right: 1rem;" hidden></i>
+        <i class="fa fa-list" aria-hidden="true" data-toggle="modal" data-target="#serach-place-list" style="padding-right: 1rem;" hidden></i>
+        <i class="fa fa-search" aria-hidden="true" data-toggle="modal" data-target="#setting" style="padding-right: 1rem;" hidden></i>
+      </div>
     </div>
   </header>
   <main class="main">
-    <div id="view-home" class="container-fluid height-100" hidden >
+    <div id="view-home" class="container-fluid height-100" >
       <div class="row no-gutters align-items-center height-100">
         <div class="col" style="padding-bottom: 3rem;">
           <!--首页-->
@@ -32,7 +34,7 @@
         </div>
       </div>
     </div>
-    <div id="view-map" class="container-fluid height-100">
+    <div id="view-map" class="container-fluid height-100" hidden>
       <div id="view-map-main" class="row no-gutters align-items-start height-100" >
         <div class="col height-100" >
           <!--地图模式-->

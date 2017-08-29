@@ -18,6 +18,7 @@
         <i class="fa fa-home" aria-hidden="true" style="padding-right: 1rem;" hidden></i>
         <i class="fa fa-list" aria-hidden="true" data-toggle="modal" data-target="#serach-place-list" style="padding-right: 1rem;" hidden></i>
         <i class="fa fa-search" aria-hidden="true" data-toggle="modal" data-target="#setting" style="padding-right: 1rem;" hidden></i>
+        <i class="fa fa-info-circle" aria-hidden="true" data-toggle="modal" data-target="#setting" style="padding-right: 1rem;"></i>
       </div>
     </div>
   </header>
@@ -106,6 +107,16 @@
     </div>
   </main>
   <div class="dialog-container">
+    <!--通知对话框-->
+    <div id="notify" class="modal fade" id="error" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document" style="margin: 200px 30px;">
+        <div class="modal-content">
+          <div class="modal-body">
+            <div class="text-center ctx">确认要删除吗?</div>
+          </div>
+        </div>
+      </div>
+    </div>
     <!--设置对话框-->
     <div id="setting" class="modal fade" id="error" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
       <div class="modal-dialog" role="document" style="margin-top: 100px;">
@@ -127,26 +138,6 @@
                 <option value="park">公园</option>
               </select>
             </div>
-            <!-- <hr>
-            <div class="text">查找范围:</div>
-            <div class="form-group row">
-              <div class="col-6">
-                <select class="form-control" id="max-duration">
-                  <option value="10">10 分钟</option>
-                  <option value="15">15 分钟</option>
-                  <option value="30">30 分钟</option>
-                  <option value="60">1 小时</option>
-                </select>
-              </div>
-                <div class="col-6">
-                <select class="form-control" id="mode">
-                  <option value="DRIVING">开车</option>
-                  <option value="WALKING">走路</option>
-                  <option value="BICYCLING">自行车</option>
-                  <option value="TRANSIT">公共交通</option>
-                </select>
-              </div>
-            </div> -->
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
@@ -169,7 +160,7 @@
               <label for="exampleInputEmail1">编辑标签:</label>
               <div class="tags-input" style="background-color: #fff; border: 1px solid #ccc; box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075); padding: 4px 6px; color: #555; vertical-align: middle; border-radius: 4px; max-width: 100%; line-height: 22px; cursor: text;"> <span class="badge badge-primary">Primary</span>
                 <span class="badge badge-primary">Primary</span>
-                <input type="text" class="" id="new-tag" aria-describedby="new tag" placeholder="" style="border: none; box-shadow: none; outline: none; background-color: transparent; padding: 0 6px; margin: 0; width: auto; max-width: inherit;">
+                <input type="text" class="" id="new-tag" aria-describedby="new tag" placeholder="" style="border: none; box-shadow: none; outline: none; background-color: transparent; padding: 0 6px; margin: 0; width: auto; max-width: 7rem;">
               </div>
               <small>
                 我的标签:

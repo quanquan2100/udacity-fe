@@ -41,6 +41,7 @@
         wishList: ko.observableArray(wishList),
         visitedList: ko.observableArray(visitedList),
         searchList: ko.observableArray(searchList),
+        wikiList: ko.observableArray([]),
         selectedPlace: {
           id: ko.observable(""),
           name: ko.observable(""),
@@ -65,7 +66,7 @@
           mapView.populateInfoWindow(mapView.markers[data.index], mapView.largeInfowindow, data);
         },
         showDetail: function(data, e) { // 使用 wiki 百科查看详情
-          console.log("使用 wiki 查询详情");
+          app.showWiki(data.name);
         },
         setSelectedPlace: function(data, e) {
           var index = data.index;
@@ -83,26 +84,26 @@
           vm.selectedPlace.geometry.location.lat(data.geometry.location.lat);
           vm.selectedPlace.geometry.location.lng(data.geometry.location.lng);
         },
-        addVisitedPlace: function (data, e) {
+        addVisitedPlace: function(data, e) {
           vm.visitedList.push(ko.toJS(vm.selectedPlace))
           app.noty("已添加记录, 你可以进入列表界面查看");
         },
-        showInMap: function (data, e) {
+        showInMap: function(data, e) {
           app.showMapView(data.geometry.location);
         },
-        setWishDelIndex: function (data, e) {
+        setWishDelIndex: function(data, e) {
           vm.delWishIndex(ko.contextFor(e.currentTarget)["$index"]());
           $modalDelComfirm.modal("show");
         },
-        setVisitedDelIndex: function (data, e) {
+        setVisitedDelIndex: function(data, e) {
           vm.delVisitedIndex(ko.contextFor(e.currentTarget)["$index"]());
           $("#del-visited-comfirm").modal("show");
         },
-        delWishItem: function (data, e) {
+        delWishItem: function(data, e) {
           var index = vm.delWishIndex();
           vm.wishList.splice(index, 1);
         },
-        delVisitedItem: function (data, e) {
+        delVisitedItem: function(data, e) {
           var index = vm.delVisitedIndex();
           vm.visitedList.splice(index, 1);
         },
@@ -395,6 +396,7 @@
       }
       ctx += '<div><a data-index="' + marker.id + '" id="record-pos-button" href="javascript:void(0);"  onclick="app.add2VisitedList(this);">添加记录</a></div>'
       ctx += '<div><a data-index="' + marker.id + '" id="wish-pos-button" href="javascript:void(0);"  onclick="app.add2WishList(this);">添加心愿单</a></div>'
+      ctx += '<div><a data-name="' + place.name + '" id="wish-pos-button" href="javascript:void(0);"  onclick="app.showWiki(\'' + place.name + '\');">查看相关内容</a></div>'
       infowindow.setContent(ctx);
       infowindow.open(map, marker);
     } else {
@@ -631,47 +633,67 @@
     $modalRecordPos.modal("show");
   };
 
-  // app.editVisitedItem = function(item) {
-  //   var $ele = $(ele);
-  //   var index = parseInt($ele.attr("data-index"));
-  //   $modalRecordPos.data("index", index).data("record", false);
-  //   $modalRecordPos.modal("show");
-  //   // $modalRecordPos.one("hidden.bs.modal", function(e) {
-  //   //   if ($modalRecordPos.data("record")) {
-  //   //     var index = $modalRecordPos.data("index");
-  //   //     var data = viewModel.getSearchPlace(index);
-  //   //     var id = Date.now();
-  //   //     var time = new Date(id);
-  //   //     data.time = time.toLocaleDateString() + " " + time.toLocaleTimeString();
-  //   //     data.like = true;
-  //   //     data.description = "啰嗦几句";
-  //   //     viewModel.addVisitedPlace(data);
-  //   //   }
-  //   // });
-  // };
-
   // 显示通知, 通知会自动关闭
   app.noty = function(text) {
     $modalNotify.find(".ctx").html(text);
     $modalNotify.modal("show");
   };
 
-  app.comfirm = function(text) {
+  app.getWikiData = function(name) {
     return new Promise(function(resolve, reject) {
-      $modalDelComfirm.data("result", false);
-      $modalDelComfirm.find(".ctx").html(text);
-      $modalDelComfirm.modal("show");
-      $modalDelComfirm.one("hidden.bs.modal", function(e) {
-        if ($modalDelComfirm.data("result")) {
-          resolve();
-        } else {
+      var wikiUrl = 'http://zh.wikipedia.org/w/api.php?action=opensearch&search=' + name + '&format=json';
+      var wikiRequestTimeout = setTimeout(function() {
+        app.noty("暂未查到相关内容");
+      }, 8000);
+
+      $.ajax({
+        url: wikiUrl,
+        dataType: "jsonp",
+        jsonp: "callback",
+        success: function(response) {
+          var articleList = response[1];
+          var list = [];
+
+          for (var i = 0, item; i < articleList.length; i++) {
+            item = {
+              title: response[1][i],
+              description: response[2][i],
+              href: response[3][i]
+            }
+            list.push(item);
+          };
+          clearTimeout(wikiRequestTimeout);
+          resolve(list);
+        },
+        fail: function() {
+          reject();
+        },
+        error: function() {
           reject();
         }
       });
     });
   };
 
+  app.showWiki = function(name) {
+    app.startLoad(name)
+      .then(function (name) {
+        $("#wiki-list").modal("show");
+        return name;
+      })
+      .then(app.getWikiData)
+      .then(function (data) {
+        viewModel.vm.wikiList(data);
+      })
+      .catch(function () {
+        viewModel.vm.wikiList([]);
+      })
+      .then(app.endLoad)
+      .catch(app.endLoad);
+  };
+
   app.init().then(viewModel.init);
+
 
   window.viewModel = viewModel;
   window.app = app;

@@ -112,8 +112,7 @@ $(function() {
   /* 写一个叫做 "Initial Entries" 的测试用例 */
   describe('Initial Entries', function() {
     beforeEach(function(done) {
-      spyOn(window, "loadFeed");
-
+      spyOn(window, "loadFeed").and.callThrough();
       window.loadFeed(0, function() {
         done();
       });
@@ -132,29 +131,30 @@ $(function() {
       done();
     });
 
-
   });
 
   /* 写一个叫做 "New Feed Selection" 的测试用例 */
   describe('New Feed Selection', function() {
-    // var oldData, newData;
-    // oldData = $(".feed").text();
-    // beforeEach(function(done) {
-
-    //   loadFeed(1, function() {
-        
-    //     done();
-    //   });
-    // });
+    var oldData, newData;
+    beforeEach(function(done) {
+      loadFeed(0, function() {
+        oldData = $(".feed").text();
+        loadFeed(1, function() {
+          newData = $(".feed").text();
+          done();
+        });
+      });
+    });
 
     /* 
      * 写一个测试保证当用 loadFeed 函数加载一个新源的时候内容会真的改变。
      * 记住，loadFeed() 函数是异步的。
      */
-    // it('content will change after loadFeed load new data', function(done) {
-    //   done();
-    //   newData = $(".feed").text();
-    //   expect(oldData).not.toBe(newData);
-    // });
+    it('content will change after loadFeed load new data', function(done) {
+      console.log(oldData)
+      console.log(newData)
+      expect(oldData).not.toBe(newData);
+      done();
+    });
   });
 }());

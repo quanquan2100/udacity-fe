@@ -2,14 +2,14 @@
   // 常量
   var MAP_APP_KEY = "AIzaSyAjkLBg_PHjw5O4h8S9tAc_iSojq4BKA9s";
 
-  var $map, $modalDelComfirm, $modalSetting, $modalRecordPos, $modalSearch, $spinner, $serachType, $viewMap, $viewHome, $viewList;
+  var $map, $modalDelComfirm, $modalSetting, $modalRecordPos, $modalSearch, $modalSearchPlaceList, $spinner, $serachType, $viewMap, $viewHome, $viewList, $modalNotify;
   var app = {};
 
 
   // ---- viewModel begin --------------------------------------------------------
   var viewModel = {};
   viewModel.init = function(ko) {
-    return new Promise(function (resolve, reject) {
+    return new Promise(function(resolve, reject) {
       var visitedList = localStorage.getItem("visitedList");
       if (!visitedList) {
         visitedList = [];
@@ -17,53 +17,72 @@
       } else {
         visitedList = JSON.parse(visitedList);
       }
-      var wishList =  localStorage.getItem("wishList");
+      var wishList = localStorage.getItem("wishList");
       if (!wishList) {
         wishList = [];
         localStorage.setItem("wishList", "[]");
       } else {
         wishList = JSON.parse(wishList);
       }
-      var centerPlace = localStorage.getItem("centerPlace");
-      if (!centerPlace) {
-        centerPlace = { "lat": 39.9653473, "lng": 116.27073879999999 };
-        localStorage.setItem("centerPlace", '{ "lat": 39.9653473, "lng": 116.27073879999999 }');
-      } else {
-        centerPlace = JSON.parse(centerPlace);
+      var centerLat = localStorage.getItem("centerLat");
+      var centerLng = localStorage.getItem("centerLng");
+      if (!centerLat || !centerLng) {
+        centerLat = 39.9653473;
+        centerLng = 116.27073879999999;
       }
       var searchList = [];
 
       var vm = {
         view: ko.observable("main"),
         centerLocation: {
-          lat: ko.observable(centerPlace.lat),
-          lng: ko.observable(centerPlace.lng)
+          lat: ko.observable(centerLat),
+          lng: ko.observable(centerLng)
         },
         wishList: ko.observableArray(wishList),
         visitedList: ko.observableArray(visitedList),
-        searchList: ko.observableArray(searchList)
+        searchList: ko.observableArray(searchList),
+        showInfo: function(data, e) {
+          console.log(data);
+          $modalSearchPlaceList.modal("hide");
+          mapView.largeInfowindow.close();
+          mapView.populateInfoWindow(mapView.markers[data.index], mapView.largeInfowindow, data);
+        }
       };
+      vm.wishList.subscribe(function(newValue) {
+        localStorage.setItem("wishList", JSON.stringify(newValue));
+      });
+      vm.visitedList.subscribe(function(newValue) {
+        localStorage.setItem("visitedList", JSON.stringify(newValue));
+      });
+      vm.centerLocation.lat.subscribe(function(newValue) {
+        localStorage.setItem("centerLat", newValue);
+      });
+      vm.centerLocation.lng.subscribe(function(newValue) {
+        localStorage.setItem("centerLng", newValue);
+      });
+      ko.applyBindings(vm);
       viewModel.vm = vm;
       resolve(vm);
     });
   };
   viewModel.getVisitedData = function() {
     return viewModel.vm.visitedList();
-    var locations = [
-      { title: '公司', location: { lat: 39.9653473, lng: 116.27073879999999 } },
-      { title: 'www', location: { lat: 39.9553473, lng: 116.29073879999999 } },
-      { title: 'ddd', location: { lat: 39.9253473, lng: 116.37073879999999 } },
-      { title: 'xxx', location: { lat: 39.9180628, lng: 116.3961237 } }
-    ];
-    return locations;
   };
-  viewModel.setCenterPlace = function (centerPlace) {
+  viewModel.setCenterPlace = function(centerPlace) {
     viewModel.centerLocation.lat(centerPlace.lat);
     viewModel.centerLocation.lng(centerPlace.lng);
-    localStorage.setItem("centerPlace", JSON.stringify(centerPlace));
   }
-  viewModel.addWishPlace = function(data){
-    console.log(data);
+  viewModel.addWishPlace = function(data) {
+    viewModel.vm.wishList.push(data);
+  };
+  viewModel.getSearchPlace = function(index) {
+    return viewModel.vm.searchList()[index];
+  };
+  viewModel.getCenterLocation = function() {
+    return {
+      lat: viewModel.vm.centerLocation.lat(),
+      lng: viewModel.vm.centerLocation.lng()
+    };
   };
   // ---- viewModel end --------------------------------------------------------
   // ---- main view begin --------------------------------------------------------
@@ -76,7 +95,7 @@
 
   var listView = {};
 
-  app.listView = listView; 
+  app.listView = listView;
 
   // ---- list view end --------------------------------------------------------
   // ---- map view begin --------------------------------------------------------
@@ -86,8 +105,12 @@
   mapView.markers = [];
   mapView.visitedMarkers = [];
 
-  mapView.getCenterPosition = function() {
+  mapView.getCenterPosition = function(place) {
     return new Promise(function(resolve, reject) {
+      if (place) {
+        resolve(place);
+        return;
+      }
       // Try HTML5 geolocation.
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(function(position) {
@@ -95,6 +118,8 @@
             lat: position.coords.latitude,
             lng: position.coords.longitude
           };
+          viewModel.vm.centerLocation.lat(position.coords.latitude);
+          viewModel.vm.centerLocation.lng(position.coords.longitude);
           resolve(pos);
         }, function() {
           reject(false);
@@ -131,14 +156,26 @@
           mapView.centerAutocomplete.addListener('place_changed', function() {
             mapView.largeInfowindow.close();
             var place = this.getPlace();
-            if (!place.geometry) {
-              // User entered the name of a Place that was not suggested and
-              // pressed the Enter key, or the Place Details request failed.
-              window.alert("需要选择列表中的具体地点哦");
+            if (place.name === "") {
+              app.startLoad()
+                .then(mapView.getCenterPosition)
+                .catch(function(pos) { // 如果获取不到当前位置, 则使用默认位置
+                  return { lat: 39.9653473, lng: 116.27073879999999 };
+                })
+                .then(function(pos) {
+                  mapView.centerMarker.setPosition(pos)
+                  mapView.map.setCenter(pos);
+                  mapView.map.setZoom(15);
+                })
+                .then(app.endLoad);
+            } else if (!place.geometry) {
+              app.noty("需要选择列表中的具体地点哦");
               return;
+            } else {
+              mapView.centerMarker.setPosition(place.geometry.location)
+              mapView.map.setCenter(place.geometry.location);
+              mapView.map.setZoom(15);
             }
-            mapView.map.setCenter(place.geometry.location);
-            mapView.map.setZoom(17);
           });
 
           mapView.largeInfowindow = new google.maps.InfoWindow();
@@ -160,14 +197,11 @@
             return markerImage;
           }
 
-          // Style the markers a bit. This will be our listing marker icon.
           mapView.defaultIcon = makeMarkerIcon('0091ff');
 
-          // Create a "highlighted location" marker color for when the user
-          // mouses over the marker.
           mapView.highlightedIcon = makeMarkerIcon('FFFF24');
 
-          mapView.createMarker = function(place, label) {
+          mapView.createMarker = function(place, index) {
             var position = place.geometry.location;
             // Create a marker per location, and put into markers array.
             var marker = new google.maps.Marker({
@@ -175,7 +209,8 @@
               title: place.name,
               // animation: google.maps.Animation.DROP,
               // icon: mapView.defaultIcon,
-              label: label.toString()
+              id: index,
+              label: index.toString()
             });
             marker.addListener('click', function() {
               mapView.populateInfoWindow(this, mapView.largeInfowindow, place);
@@ -185,7 +220,7 @@
           };
 
           // This function will loop through the markers array and display them all.
-          mapView.showMarkers = function (markers) {
+          mapView.showMarkers = function(markers) {
             for (var i = 0; i < markers.length; i++) {
               markers[i].setMap(mapView.map);
             }
@@ -198,10 +233,10 @@
             }
           };
 
-          function isInfoWindowOpen(infoWindow) {
-            var map = infoWindow.getMap();
-            return (map !== null && typeof map !== "undefined");
-          }
+          // function isInfoWindowOpen(infoWindow) {
+          //   var map = infoWindow.getMap();
+          //   return (map !== null && typeof map !== "undefined");
+          // }
 
 
           // This function populates the infowindow when the marker is clicked. We'll only allow
@@ -222,18 +257,10 @@
               if (place.photos && place.photos.length > 0) {
                 ctx += '<div><img src="' + place.photos[0].getUrl({ 'maxWidth': 100, 'maxHeight': 100 }) + '"/></div>'
               }
-              ctx += '<div><a id="record-pos-button" href="javascript:void(0);"  onclick="app.openRecordModal(this);">添加记录</a></div>'
-              ctx += '<div><a id="wish-pos-button" href="javascript:void(0);"  onclick="app.add2WishList(this);">添加心愿单</a></div>'
+              ctx += '<div><a data-index="' + marker.id + '" id="record-pos-button" href="javascript:void(0);"  onclick="app.openRecordModal(this);">添加记录</a></div>'
+              ctx += '<div><a data-index="' + marker.id + '" id="wish-pos-button" href="javascript:void(0);"  onclick="app.add2WishList(this);">添加心愿单</a></div>'
               infowindow.setContent(ctx);
               infowindow.open(map, marker);
-              $("#record-pos-button").attr("data-place-id", place.place_id)
-                .attr("data-name", place.name)
-                .attr("data-vicinity", place.vicinity)
-                .attr("data-location", place.geometry.location.toString());
-              $("#wish-pos-button").attr("data-place-id", place.place_id)
-                .attr("data-name", place.name)
-                .attr("data-vicinity", place.vicinity)
-                .attr("data-location", place.geometry.location.toString());
             }
           }
           mapView.geocoder = new google.maps.Geocoder();
@@ -242,6 +269,7 @@
 
           mapView.map.addListener('idle', mapView.searchNearby);
           $modalSetting.on("hidden.bs.modal", mapView.searchNearby);
+
 
           mapView.centerMarker = new google.maps.Marker({
             position: currentPosition,
@@ -269,7 +297,12 @@
   };
 
   mapView.searchNearby = function() {
-    return new Promise(function(resolve, reject){
+    return new Promise(function(resolve, reject) {
+      var map = mapView.largeInfowindow.getMap();
+      if (map !== null && typeof map !== "undefined") {
+        return;
+      }
+
       var serachType = [];
       serachType.push($serachType.val());
       var searchOption = {
@@ -280,15 +313,29 @@
         if (status == google.maps.places.PlacesServiceStatus.OK) {
           mapView.hideMarkers(mapView.markers);
           mapView.markers = [];
+          var searchList = [];
           for (var i = 0; i < results.length; i++) {
             mapView.markers.push(mapView.createMarker(results[i], i));
+            searchList.push({
+              index: i,
+              name: results[i].name,
+              vicinity: results[i].vicinity,
+              geometry: {
+                location: {
+                  lat: results[i].geometry.location.lat(),
+                  lng: results[i].geometry.location.lng()
+                }
+              },
+              place_id: results[i].place_id
+            });
           }
           mapView.showMarkers(mapView.markers);
+          viewModel.vm.searchList(searchList);
           resolve();
         } else {
           reject("未查询到匹配地点, 你可以移动地图或缩放地图试试");
         }
-      });              
+      });
     });
   };
 
@@ -339,7 +386,7 @@
   app.mapView = mapView;
 
   // ---- map view end --------------------------------------------------------
-  
+
   // 加载基本资源
   app.init = function() {
     return new Promise(function(resolve, reject) {
@@ -350,7 +397,7 @@
           bootstrap: "bootstrap/dist/js/bootstrap.min",
           knockout: "knockout/dist/knockout",
           underscore: "underscore/underscore",
-          tether: "tether/dist/js/tether", // 由于 bootstrap 使用其全局变量, 导致不适用于 require.
+          // tether: "tether/dist/js/tether", // 由于 bootstrap 使用其全局变量, 导致不适用于 require.
           googlemap: "https://maps.googleapis.com/maps/api/js?libraries=places,geometry,drawing&key=" + MAP_APP_KEY + "&v=3&callback=define"
         },
         shim: {
@@ -372,6 +419,8 @@
         $viewMap = $("#view-map");
         $viewHome = $("#view-home");
         $viewList = $("#view-list");
+        $modalNotify = $("#notify");
+        $modalSearchPlaceList = $("#search-place-list");
 
         $(".menu .fa-list-alt").on("click", function(e) {
           app.showListView();
@@ -390,6 +439,15 @@
           app.showMapView();
         });
 
+        $modalNotify.on("show.bs.modal", function(e) {
+          setTimeout(function() {
+            $modalNotify.modal("hide");
+          }, 1000);
+        });
+
+        $modalDelComfirm.find(".confirm").on("click", function (e) {
+          $modalDelComfirm.data("result", true);
+        });
         resolve(ko);
       }, function(err) {
         console.error("err:", err);
@@ -419,29 +477,29 @@
   };
 
   // 显示地图视口
-  app.showMapView = function() {
+  app.showMapView = function(place) {
     return new Promise(function(resolve, reject) {
-      app.startLoad()
-        .then(function() {
-          $viewMap.removeAttr("hidden");
-          $viewHome.attr("hidden", "hidden");
-          $viewList.attr("hidden", "hidden");
-          $(".header .fa-home").removeAttr("hidden");
-          $("[data-target='#setting']").removeAttr("hidden");
-          $("[data-target='#serach-place-list']").removeAttr("hidden");
+      app.startLoad(place)
+        .then(function(data) {
+          viewModel.vm.view("map");
+          return data;
         })
-        // .then(mapView.getCenterPosition)
-        .then(function(pos) { // 如果获取不到当前位置, 则使用默认位置
-          return { lat: 39.9653473, lng: 116.27073879999999 };
+        .then(mapView.getCenterPosition)
+        .catch(function(err) { // 如果获取不到当前位置, 则使用存储的位置
+          return viewModel.getCenterLocation();
         })
         .then(mapView.showMap)
         .then(mapView.showVisitedPlace)
         .catch(mapView.loadErrorView)
         .then(app.endLoad)
-        .then(function() {
-          resolve();
-        }).catch(function() {
-          reject();
+        .then(function(data) {
+          resolve(data);
+        })
+        .catch(function(err) {
+          if (err) {
+            app.noty(err);
+          }
+          reject(err);
         });
     });
   };
@@ -450,19 +508,14 @@
   app.showMainView = function() {
     return new Promise(function(resolve, reject) {
       app.startLoad()
-        .then(function () {
-          $viewHome.removeAttr("hidden");
-          $viewMap.attr("hidden", "hidden");
-          $viewList.attr("hidden", "hidden");
-          $(".header .fa-home").attr("hidden", "hidden");
-          $("[data-target='#setting']").attr("hidden", "hidden");
-          $("[data-target='#serach-place-list']").attr("hidden", "hidden");
+        .then(function() {
+          viewModel.vm.view("main");
         })
         .then(app.endLoad)
-        .then(function () {
+        .then(function() {
           resolve();
         })
-        .catch(function () {
+        .catch(function() {
           reject();
         });
     });
@@ -472,19 +525,14 @@
   app.showListView = function() {
     return new Promise(function(resolve, reject) {
       app.startLoad()
-        .then(function () {
-          $viewList.removeAttr("hidden");
-          $viewMap.attr("hidden", "hidden");
-          $viewHome.attr("hidden", "hidden");
-          $(".header .fa-home").removeAttr("hidden");
-          $("[data-target='#setting']").attr("hidden", "hidden");
-          $("[data-target='#serach-place-list']").attr("hidden", "hidden");
+        .then(function() {
+          viewModel.vm.view("list");
         })
         .then(app.endLoad)
-        .then(function () {
+        .then(function() {
           resolve();
         })
-        .catch(function () {
+        .catch(function() {
           reject();
         });
     });
@@ -496,16 +544,46 @@
     $modalRecordPos.modal("show");
   };
 
-  app.add2WishList = function (ele) {
+  app.add2WishList = function(ele) {
     var $ele = $(ele);
-    var data = {};
-    data.place_id = $ele.attr("data-place-id");
-    data.name = $ele.attr("data-name");
-    data.vicinity = $ele.attr("data-vicinity");
-    data.location = $ele.attr("data-location");
+    var index = parseInt($ele.attr("data-index"));
+    var data = viewModel.getSearchPlace(index);
     viewModel.addWishPlace(data);
+    app.noty("成功加入心愿单");
+  };
+
+  app.add2VisitedList = function() {
+    var $ele = $(ele);
+    var index = parseInt($ele.attr("data-index"));
+    var data = viewModel.getSearchPlace(index);
+    data.time = new Date;
+    data.like = true;
+    data.description = "啰嗦几句";
+  };
+
+  // 显示通知, 通知会自动关闭
+  app.noty = function(text) {
+    $modalNotify.find(".ctx").html(text);
+    $modalNotify.modal("show");
+  };
+
+  app.comfirm = function (text) {
+    return new Promise(function (resolve, reject) {
+      $modalDelComfirm.data("result", false);
+      $modalDelComfirm.find(".ctx").html(text);
+      $modalDelComfirm.modal("show");
+      $modalDelComfirm.one("hidden.bs.modal", function (e) {
+        if ($modalDelComfirm.data("result")) {
+          resolve();
+        } else {
+          reject();
+        }
+      });
+    });
   };
 
   app.init().then(viewModel.init);
+
+  window.viewModel = viewModel;
   window.app = app;
 }());

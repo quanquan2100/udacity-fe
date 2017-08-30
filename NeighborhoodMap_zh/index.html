@@ -13,17 +13,17 @@
 <body>
   <header class="header">
     <div class="d-flex flex-row" style="width: 100%;">
-      <h4 data-bind="text:title">目的地列表</h4>
+      <h4>目的地列表</h4>
       <div class="ml-auto" style="color: rgba(255, 255, 255, 0.71);">
-        <i class="fa fa-home" aria-hidden="true" style="padding-right: 1rem;" hidden></i>
-        <i class="fa fa-list" aria-hidden="true" data-toggle="modal" data-target="#serach-place-list" style="padding-right: 1rem;" hidden></i>
-        <i class="fa fa-search" aria-hidden="true" data-toggle="modal" data-target="#setting" style="padding-right: 1rem;" hidden></i>
-        <i class="fa fa-info-circle" aria-hidden="true" data-toggle="modal" data-target="#setting" style="padding-right: 1rem;"></i>
+        <i class="fa fa-list" data-bind="visible: view() === 'map'" data-toggle="modal" data-target="#search-place-list" style="padding-right: 1rem; display:none;" ></i>
+        <i class="fa fa-search" data-bind="visible: view() === 'map'" data-toggle="modal" data-target="#setting" style="padding-right: 1rem;display:none;" ></i>
+        <i class="fa fa-info-circle" data-bind="visible: view() === 'main'" data-toggle="modal" data-target="#help-info" style="padding-right: 1rem;"></i>
+        <i class="fa fa-home" data-bind="visible: view() !== 'main'" style="padding-right: 1rem;display:none;" ></i>
       </div>
     </div>
   </header>
   <main class="main">
-    <div id="view-home" class="container-fluid height-100" >
+    <div id="view-home" data-bind="visible: view() === 'main'" class="container-fluid height-100" >
       <div class="row no-gutters align-items-center height-100">
         <div class="col" style="padding-bottom: 3rem;">
           <!--首页-->
@@ -35,7 +35,7 @@
         </div>
       </div>
     </div>
-    <div id="view-map" class="container-fluid height-100" hidden>
+    <div id="view-map" data-bind="visible: view() === 'map'" class="container-fluid height-100" style="display:none;">
       <div id="view-map-main" class="row no-gutters align-items-start height-100" >
         <div class="col height-100" >
           <!--地图模式-->
@@ -54,23 +54,29 @@
         </div>
       </div>
     </div>
-    <div id="view-list" class="container height-100" hidden>
+    <div id="view-list" data-bind="visible: view() === 'list'" class="container height-100" style="display:none;">
       <div class="row no-gutters align-items-start height-100">
         <div class="col height-100" >
-          <div class="badge-pill text-center" style="background-color: white;color: gray; margin-top: 0.5rem;margin-bottom: 0.5rem;"><i class="fa fa-search" aria-hidden="true"></i> 添加筛选条件</div>
+          <!--暂时砍掉搜索功能-->
+          <!-- <div class="badge-pill text-center" style="background-color: white;color: gray; margin-top: 0.5rem;margin-bottom: 0.5rem;"><i class="fa fa-search" aria-hidden="true"></i> 添加筛选条件</div>
           <ul class="list-inline" style="margin-bottom: 0.5rem;">
             <li class="list-inline-item"><span class="badge badge-warning">博物馆</span></li>
             <li class="list-inline-item"><span class="badge badge-warning">古典</span></li>
-          </ul>
-          <div style="font-size: 0.8rem;color: gray;">计划浏览的地点:</div>
-          <ul class="list-unstyled">
+          </ul> -->
+          <div style="font-size: 0.8rem;color: gray;" data-bind="visible: wishList().length > 0">计划浏览的地点:</div>
+          <ul class="list-unstyled" data-bind="foreach: wishList">
             <li>
               <div class="info-card rounded-top md-15">
-                <h4 class="info-card-title"><i class="fa fa-university" aria-hidden="true"></i> 国家博物馆</h4>
-                <p>中国国家博物馆（National Museum of China）简称国博，位于北京市中心天安门广场东侧，东长安街南侧，与人民大会堂东西相对称，是历史与艺术并重，集收藏、展览、研究、考古、公共教育、文化交流于一体的综合性博物馆。</p>
+                <h4 class="info-card-title">
+                  <i class="fa fa-university" aria-hidden="true"></i> 
+                  <span data-bind="text: name"></span>
+                </h4>
                 <div class="d-flex flex-row info-card-second" title="点击在地图中查看">
-                  <div><i class="fa fa-map-marker" aria-hidden="true"></i> 北京市海淀区西四环北路十号院</div>
-                  <div class="ml-auto">15.4km</div>
+                  <div>
+                    <i class="fa fa-map-marker" aria-hidden="true"></i> 
+                    <span data-bind="text: vicinity"></span>
+                  </div>
+                  <!-- <div class="ml-auto">15.4km</div> -->
                 </div>
                 <div class="row">
                   <div class="col text-center buttom" title="在地图中查看"><i class="fa fa-map-o" aria-hidden="true"></i></div>
@@ -81,18 +87,25 @@
             </li>
           </ul>
           <div style="font-size: 0.8rem;color: gray;">以下是已访问过的地点:</div>
-          <ul class="list-unstyled">
+          <ul class="list-unstyled" data-bind="foreach: visitedList">
             <li>
               <div class="info-card rounded-top md-15">
-                <h4 class="info-card-title"><i class="fa fa-university" aria-hidden="true"></i> 观复博物馆</h4>
+                <h4 class="info-card-title">
+                  <i class="fa fa-university" aria-hidden="true"></i> 
+                  <span data-bind="text: name"></span>
+                </h4>
                 <div class="d-flex flex-row info-card-second">
-                  <div><i class="fa fa-clock-o" aria-hidden="true"></i> 2017年9月26日</div>
-                  <div class="ml-auto text-danger"><i class="fa fa-heart" aria-hidden="true"></i></div>
+                  <div>
+                    <i class="fa fa-clock-o" aria-hidden="true"></i> 
+                    <span data-bind="text: time"></span>
+                  </div>
+                  <div data-bind="css: {'text-danger': like}" class="ml-auto text-danger"><i class="fa fa-heart" aria-hidden="true"></i></div>
                 </div>
-                <p>纪要,说一段浏览的感受或者心得, 怎么着都行.</p>
-                <ul class="list-inline" style="padding-bottom: 5px;">
-                  <li class="list-inline-item"><span class="badge badge-warning">博物馆</span></li>
-                  <li class="list-inline-item"><span class="badge badge-warning">古典</span></li>
+                <p data-bind="text: description"></p>
+                <ul  data-bind="foreach: visitedList" class="list-inline" style="padding-bottom: 5px;">
+                  <li class="list-inline-item">
+                    <span data-bind="text: $data" class="badge badge-warning"></span>
+                  </li>
                 </ul>
                 <div class="row">
                   <div class="col text-center buttom" title="在地图中查看"><i class="fa fa-map-o" aria-hidden="true"></i></div>
@@ -107,9 +120,22 @@
     </div>
   </main>
   <div class="dialog-container">
+    <!--说明/帮助对话框-->
+    <div id="help-info" class="modal fade" id="error" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document" style="margin: 200px 30px;">
+        <div class="modal-content">
+          <div class="modal-body">
+            <div class="text-center">项目说明及使用说明</div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary mx-auto" data-dismiss="modal">我了解了</button>
+          </div>
+        </div>
+      </div>
+    </div>
     <!--通知对话框-->
     <div id="notify" class="modal fade" id="error" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-      <div class="modal-dialog" role="document" style="margin: 200px 30px;">
+      <div class="modal-dialog modal-sm" role="document" style="margin: 200px 30px;">
         <div class="modal-content">
           <div class="modal-body">
             <div class="text-center ctx">确认要删除吗?</div>
@@ -119,7 +145,7 @@
     </div>
     <!--设置对话框-->
     <div id="setting" class="modal fade" id="error" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-      <div class="modal-dialog" role="document" style="margin-top: 100px;">
+      <div class="modal-dialog modal-sm" role="document" style="margin-top: 100px;">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title" id="exampleModalLabel">搜索设置</h5>
@@ -197,7 +223,7 @@
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-dismiss="modal">再想想</button>
-            <button type="button" class="btn btn-danger" data-dismiss="modal">确认</button>
+            <button type="button" class="btn btn-danger confirm" data-dismiss="modal">确认</button>
           </div>
         </div>
       </div>
@@ -223,6 +249,37 @@
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
             <button type="button" class="btn btn-primary" data-dismiss="modal">确定</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!--搜索列表显示-->
+    <div id="search-place-list" class="modal fade" id="error" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document" style="margin-top: 100px;">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">地点列表</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <ul class="list-unstyled" data-bind="foreach: searchList">
+              <li >
+                <div class="info-card rounded-top md-15" data-bind="click: $parent.showInfo">
+                  <h4 class="info-card-title"><span data-bind="text: index">1</span>. <span data-bind="text: name"></span></h4>
+                  <div class="d-flex flex-row info-card-second" title="点击在地图中查看">
+                    <div>
+                      <i class="fa fa-map-marker" aria-hidden="true"></i> 
+                      <span data-bind="text: vicinity"></span>
+                    </div>
+                  </div>
+                </div>
+              </li>
+            </ul>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
           </div>
         </div>
       </div>

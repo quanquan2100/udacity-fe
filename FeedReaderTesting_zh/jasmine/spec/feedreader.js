@@ -137,9 +137,9 @@ $(function() {
   describe('New Feed Selection', function() {
     var oldData, newData;
     beforeEach(function(done) {
-      loadFeed(0, function() {
+      loadFeed(1, function() {
         oldData = $(".feed").text();
-        loadFeed(1, function() {
+        loadFeed(0, function() {
           newData = $(".feed").text();
           done();
         });

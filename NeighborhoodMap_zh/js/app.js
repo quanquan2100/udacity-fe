@@ -373,6 +373,7 @@
           viewModel.vm.searchList(searchList);
           resolve();
         } else {
+          app.noty("未查询到匹配地点, 你可以移动地图或缩放地图试试");
           reject("未查询到匹配地点, 你可以移动地图或缩放地图试试");
         }
       });

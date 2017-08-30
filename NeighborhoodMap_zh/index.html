@@ -13,7 +13,7 @@
 <body>
   <header class="header">
     <div class="d-flex flex-row" style="width: 100%;">
-      <h4>目的地列表</h4>
+      <h4>地图应用</h4>
       <div class="ml-auto" style="color: rgba(255, 255, 255, 0.71);">
         <i class="fa fa-list" data-bind="visible: view() === 'map'" data-toggle="modal" data-target="#search-place-list" style="padding-right: 1rem; display:none;" ></i>
         <i class="fa fa-search" data-bind="visible: view() === 'map'" data-toggle="modal" data-target="#setting" style="padding-right: 1rem;display:none;" ></i>
@@ -71,7 +71,7 @@
                   <i class="fa fa-university" aria-hidden="true"></i> 
                   <span data-bind="text: name"></span>
                 </h4>
-                <div class="d-flex flex-row info-card-second" title="点击在地图中查看">
+                <div class="d-flex flex-row info-card-second" title="点击在地图中查看" data-bind="click: $parent.showInMap">
                   <div>
                     <i class="fa fa-map-marker" aria-hidden="true"></i> 
                     <span data-bind="text: vicinity"></span>
@@ -79,14 +79,14 @@
                   <!-- <div class="ml-auto">15.4km</div> -->
                 </div>
                 <div class="row">
-                  <div class="col text-center buttom" title="在地图中查看"><i class="fa fa-map-o" aria-hidden="true"></i></div>
-                  <div class="col text-center buttom" title="点击添加浏览记录"><i class="fa fa-paw" aria-hidden="true"></i></div>
-                  <div class="col text-center buttom" title="删除该目的地"><i class="fa fa-trash-o" aria-hidden="true"></i></div>
+                  <div class="col text-center buttom" title="在地图中查看" data-bind="click: $parent.showInMap"><i class="fa fa-map-o" aria-hidden="true"></i></div>
+                  <div class="col text-center buttom" title="查找相关信息" data-bind="click: $parent.showDetail"><i class="fa fa-search" aria-hidden="true"></i></div>
+                  <div class="col text-center buttom" title="删除该目的地" data-bind="click: $parent.setWishDelIndex"><i class="fa fa-trash-o" aria-hidden="true"></i></div>
                 </div>
               </div>
             </li>
           </ul>
-          <div style="font-size: 0.8rem;color: gray;">以下是已访问过的地点:</div>
+          <div style="font-size: 0.8rem;color: gray;" data-bind="visible: visitedList().length > 0">以下是已访问过的地点:</div>
           <ul class="list-unstyled" data-bind="foreach: visitedList">
             <li>
               <div class="info-card rounded-top md-15">
@@ -102,15 +102,23 @@
                   <div data-bind="css: {'text-danger': like}" class="ml-auto text-danger"><i class="fa fa-heart" aria-hidden="true"></i></div>
                 </div>
                 <p data-bind="text: description"></p>
-                <ul  data-bind="foreach: visitedList" class="list-inline" style="padding-bottom: 5px;">
+                <div class="d-flex flex-row info-card-second" title="点击在地图中查看" data-bind="click: $parent.showInMap">
+                  <div>
+                    <i class="fa fa-map-marker" aria-hidden="true"></i> 
+                    <span data-bind="text: vicinity"></span>
+                  </div>
+                  <!-- <div class="ml-auto">15.4km</div> -->
+                </div>
+                <!-- 标签功能将来添加 -->
+                <!-- <ul data-bind="foreach: visitedList" class="list-inline" style="padding-bottom: 5px;">
                   <li class="list-inline-item">
                     <span data-bind="text: $data" class="badge badge-warning"></span>
                   </li>
-                </ul>
+                </ul> -->
                 <div class="row">
-                  <div class="col text-center buttom" title="在地图中查看"><i class="fa fa-map-o" aria-hidden="true"></i></div>
-                  <div class="col text-center buttom" title="编辑浏览记录"><i class="fa fa-pencil" aria-hidden="true"></i></div>
-                  <div class="col text-center buttom" title="删除该目的地"><i class="fa fa-trash-o" aria-hidden="true"></i></div>
+                  <div class="col text-center buttom" title="在地图中查看" data-bind="click: $parent.showInMap"><i class="fa fa-map-o" aria-hidden="true"></i></div>
+                  <div class="col text-center buttom" title="查找相关信息" data-bind="click: $parent.showDetail"><i class="fa fa-search" aria-hidden="true"></i></div>
+                  <div class="col text-center buttom" title="删除该目的地" data-bind="click: $parent.setVisitedDelIndex"><i class="fa fa-trash-o" aria-hidden="true"></i></div>
                 </div>
               </div>
             </li>
@@ -182,7 +190,8 @@
             </button>
           </div>
           <div class="modal-body">
-            <div class="form-group">
+            <!--标签系统后期再说-->
+            <!-- <div class="form-group">
               <label for="exampleInputEmail1">编辑标签:</label>
               <div class="tags-input" style="background-color: #fff; border: 1px solid #ccc; box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075); padding: 4px 6px; color: #555; vertical-align: middle; border-radius: 4px; max-width: 100%; line-height: 22px; cursor: text;"> <span class="badge badge-primary">Primary</span>
                 <span class="badge badge-primary">Primary</span>
@@ -195,21 +204,21 @@
                 <span class="badge badge-default">Default</span>
                 <span class="badge badge-primary">Primary</span>
               </div>
-            </div>
+            </div> -->
             <div class="form-group">
               <label for="exampleTextarea">添加纪要:</label>
-              <textarea class="form-control" id="exampleTextarea" rows="3"></textarea>
+              <textarea class="form-control" id="exampleTextarea" rows="3" data-bind="value: selectedPlace.description"></textarea>
             </div>
             <div class="form-check">
               <label class="form-check-label">
-                <input type="checkbox" class="form-check-input">
+                <input type="checkbox" class="form-check-input" data-bind="checked: selectedPlace.like">
                 是否喜欢
               </label>
             </div>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
-            <button type="button" class="btn btn-primary">确定</button>
+            <button type="button" class="btn btn-primary confirm" data-bind="click: addVisitedPlace">确定</button>
           </div>
         </div>
       </div>
@@ -223,7 +232,20 @@
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-dismiss="modal">再想想</button>
-            <button type="button" class="btn btn-danger confirm" data-dismiss="modal">确认</button>
+            <button type="button" class="btn btn-danger confirm" data-dismiss="modal" data-bind="click:delWishItem">确认</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="del-visited-comfirm" class="modal fade" id="error" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document" style="margin: 200px 30px;">
+        <div class="modal-content">
+          <div class="modal-body">
+            <div class="text-center">确认要删除吗?</div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">再想想</button>
+            <button type="button" class="btn btn-danger confirm" data-dismiss="modal" data-bind="click: delVisitedItem">确认</button>
           </div>
         </div>
       </div>
@@ -264,6 +286,7 @@
             </button>
           </div>
           <div class="modal-body">
+            <div data-bind="visible: searchList().length === 0">未查询到匹配地点, 你可以移动地图或缩放地图试试</div>
             <ul class="list-unstyled" data-bind="foreach: searchList">
               <li >
                 <div class="info-card rounded-top md-15" data-bind="click: $parent.showInfo">

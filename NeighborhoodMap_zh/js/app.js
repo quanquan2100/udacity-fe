@@ -41,12 +41,71 @@
         wishList: ko.observableArray(wishList),
         visitedList: ko.observableArray(visitedList),
         searchList: ko.observableArray(searchList),
+        selectedPlace: {
+          id: ko.observable(""),
+          name: ko.observable(""),
+          place_id: ko.observable(""),
+          vicinity: ko.observable(""),
+          geometry: {
+            location: {
+              lat: ko.observable(""),
+              lng: ko.observable("")
+            }
+          },
+          time: ko.observable(""),
+          description: ko.observable(""),
+          tags: ko.observableArray([]),
+          like: ko.observable(false)
+        },
+        delWishIndex: ko.observable(0),
+        delVisitedIndex: ko.observable(0),
         showInfo: function(data, e) {
-          console.log(data);
           $modalSearchPlaceList.modal("hide");
           mapView.largeInfowindow.close();
           mapView.populateInfoWindow(mapView.markers[data.index], mapView.largeInfowindow, data);
-        }
+        },
+        showDetail: function(data, e) { // 使用 wiki 百科查看详情
+          console.log("使用 wiki 查询详情");
+        },
+        setSelectedPlace: function(data, e) {
+          var index = data.index;
+          var data = viewModel.getSearchPlace(index);
+          var id = Date.now();
+          var time = new Date(id);
+          vm.selectedPlace.id(id);
+          vm.selectedPlace.time(time.toLocaleDateString() + " " + time.toLocaleTimeString());
+          vm.selectedPlace.description("");
+          vm.selectedPlace.tags([]);
+          vm.selectedPlace.like(true);
+          vm.selectedPlace.name(data.name);
+          vm.selectedPlace.place_id(data.place_id);
+          vm.selectedPlace.vicinity(data.vicinity);
+          vm.selectedPlace.geometry.location.lat(data.geometry.location.lat);
+          vm.selectedPlace.geometry.location.lng(data.geometry.location.lng);
+        },
+        addVisitedPlace: function (data, e) {
+          vm.visitedList.push(ko.toJS(vm.selectedPlace))
+          app.noty("已添加记录, 你可以进入列表界面查看");
+        },
+        showInMap: function (data, e) {
+          app.showMapView(data.geometry.location);
+        },
+        setWishDelIndex: function (data, e) {
+          vm.delWishIndex(ko.contextFor(e.currentTarget)["$index"]());
+          $modalDelComfirm.modal("show");
+        },
+        setVisitedDelIndex: function (data, e) {
+          vm.delVisitedIndex(ko.contextFor(e.currentTarget)["$index"]());
+          $("#del-visited-comfirm").modal("show");
+        },
+        delWishItem: function (data, e) {
+          var index = vm.delWishIndex();
+          vm.wishList.splice(index, 1);
+        },
+        delVisitedItem: function (data, e) {
+          var index = vm.delVisitedIndex();
+          vm.visitedList.splice(index, 1);
+        },
       };
       vm.wishList.subscribe(function(newValue) {
         localStorage.setItem("wishList", JSON.stringify(newValue));
@@ -84,6 +143,9 @@
       lng: viewModel.vm.centerLocation.lng()
     };
   };
+  // viewModel.addVisitedPlace = function(data) {
+  //   viewModel.vm.visitedList.push(data);
+  // };
   // ---- viewModel end --------------------------------------------------------
   // ---- main view begin --------------------------------------------------------
 
@@ -137,6 +199,7 @@
       mapView.map.setZoom(15);
       mapView.centerMarker.setPosition(currentPosition);
       mapView.centerMarker.setMap(mapView.map);
+      mapView.centerMarker.setAnimation(google.maps.Animation.BOUNCE);
 
     } else {
       return new Promise(function(resolve, reject) {
@@ -239,30 +302,6 @@
           // }
 
 
-          // This function populates the infowindow when the marker is clicked. We'll only allow
-          // one infowindow which will open at the marker that is clicked, and populate based
-          // on that markers position.
-          mapView.populateInfoWindow = function(marker, infowindow, place) {
-            // Check to make sure the infowindow is not already opened on this marker.
-            if (infowindow.marker != marker) {
-              if (!place || !place.geometry) {
-                return;
-              }
-              // Clear the infowindow content to give the streetview time to load.
-              infowindow.setContent('');
-              infowindow.marker = marker;
-              // Make sure the marker property is cleared if the infowindow is closed.
-              var ctx = "";
-              ctx += '<div>' + marker.title + '</div><div>地址:' + place.vicinity + '</div>';
-              if (place.photos && place.photos.length > 0) {
-                ctx += '<div><img src="' + place.photos[0].getUrl({ 'maxWidth': 100, 'maxHeight': 100 }) + '"/></div>'
-              }
-              ctx += '<div><a data-index="' + marker.id + '" id="record-pos-button" href="javascript:void(0);"  onclick="app.openRecordModal(this);">添加记录</a></div>'
-              ctx += '<div><a data-index="' + marker.id + '" id="wish-pos-button" href="javascript:void(0);"  onclick="app.add2WishList(this);">添加心愿单</a></div>'
-              infowindow.setContent(ctx);
-              infowindow.open(map, marker);
-            }
-          }
           mapView.geocoder = new google.maps.Geocoder();
           mapView.placesService = new google.maps.places.PlacesService(mapView.map);
 
@@ -338,6 +377,32 @@
       });
     });
   };
+
+  mapView.populateInfoWindow = function(marker, infowindow, place) {
+    // Check to make sure the infowindow is not already opened on this marker.
+    if (infowindow.marker != marker) {
+      if (!place || !place.geometry) {
+        return;
+      }
+      // Clear the infowindow content to give the streetview time to load.
+      infowindow.setContent('');
+      infowindow.marker = marker;
+      // Make sure the marker property is cleared if the infowindow is closed.
+      var ctx = "";
+      ctx += '<div>' + marker.title + '</div><div>地址:' + place.vicinity + '</div>';
+      if (place.photos && place.photos.length > 0) {
+        ctx += '<div><img src="' + place.photos[0].getUrl({ 'maxWidth': 100, 'maxHeight': 100 }) + '"/></div>'
+      }
+      ctx += '<div><a data-index="' + marker.id + '" id="record-pos-button" href="javascript:void(0);"  onclick="app.add2VisitedList(this);">添加记录</a></div>'
+      ctx += '<div><a data-index="' + marker.id + '" id="wish-pos-button" href="javascript:void(0);"  onclick="app.add2WishList(this);">添加心愿单</a></div>'
+      infowindow.setContent(ctx);
+      infowindow.open(map, marker);
+    } else {
+      infowindow.close();
+      infowindow.open(mapView.map, marker);
+    }
+  };
+
 
   mapView.showVisitedPlace = function() {
     return new Promise(function(resolve, reject) {
@@ -445,9 +510,15 @@
           }, 1000);
         });
 
-        $modalDelComfirm.find(".confirm").on("click", function (e) {
+        $modalDelComfirm.find(".confirm").on("click", function(e) {
           $modalDelComfirm.data("result", true);
         });
+
+        $modalRecordPos.find(".confirm").on("click", function(e) {
+          $modalRecordPos.data("record", true);
+          $modalRecordPos.modal("hide");
+        });
+
         resolve(ko);
       }, function(err) {
         console.error("err:", err);
@@ -552,14 +623,32 @@
     app.noty("成功加入心愿单");
   };
 
-  app.add2VisitedList = function() {
+  app.add2VisitedList = function(ele) {
     var $ele = $(ele);
     var index = parseInt($ele.attr("data-index"));
     var data = viewModel.getSearchPlace(index);
-    data.time = new Date;
-    data.like = true;
-    data.description = "啰嗦几句";
+    viewModel.vm.setSelectedPlace(data);
+    $modalRecordPos.modal("show");
   };
+
+  // app.editVisitedItem = function(item) {
+  //   var $ele = $(ele);
+  //   var index = parseInt($ele.attr("data-index"));
+  //   $modalRecordPos.data("index", index).data("record", false);
+  //   $modalRecordPos.modal("show");
+  //   // $modalRecordPos.one("hidden.bs.modal", function(e) {
+  //   //   if ($modalRecordPos.data("record")) {
+  //   //     var index = $modalRecordPos.data("index");
+  //   //     var data = viewModel.getSearchPlace(index);
+  //   //     var id = Date.now();
+  //   //     var time = new Date(id);
+  //   //     data.time = time.toLocaleDateString() + " " + time.toLocaleTimeString();
+  //   //     data.like = true;
+  //   //     data.description = "啰嗦几句";
+  //   //     viewModel.addVisitedPlace(data);
+  //   //   }
+  //   // });
+  // };
 
   // 显示通知, 通知会自动关闭
   app.noty = function(text) {
@@ -567,12 +656,12 @@
     $modalNotify.modal("show");
   };
 
-  app.comfirm = function (text) {
-    return new Promise(function (resolve, reject) {
+  app.comfirm = function(text) {
+    return new Promise(function(resolve, reject) {
       $modalDelComfirm.data("result", false);
       $modalDelComfirm.find(".ctx").html(text);
       $modalDelComfirm.modal("show");
-      $modalDelComfirm.one("hidden.bs.modal", function (e) {
+      $modalDelComfirm.one("hidden.bs.modal", function(e) {
         if ($modalDelComfirm.data("result")) {
           resolve();
         } else {

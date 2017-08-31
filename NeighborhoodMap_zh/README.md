@@ -4,18 +4,18 @@
 未提供在线查看的方法, 需要您下载本地后, 安装依赖的库并使用 webserver 查看. 需要操作如下:
 1. 打开翻墙
 1. 安装依赖库
- 1. 如果未安装 npm, 需先安装 npm
- 1. 执行指令安装 bower `npm install -g bower`
- 1. 进入项目文件夹 `udacity-fe/NeighborhoodMap_zh`
- 1. 执行命令 `bower install`
+   1. 如果未安装 npm, 需先安装 npm
+   1. 执行指令安装 bower `npm install -g bower`
+   1. 进入项目文件夹 `udacity-fe/NeighborhoodMap_zh`
+   1. 执行命令 `bower install`
 1. 安装 webserver
- 1. 使用 chrome
- 1. 安装 chrome 插件 [web server](https://chrome.google.com/webstore/detail/web-server-for-chrome/ofhbbkphhbklhfoeikjpcbhemlocgigb)
- 1. 启动 webserver
- 1. 设置 `CHOOSE FOLDER` 为文件夹 `NeighborhoodMap_zh`
- 1. 设置 `Automatically show index.html` 勾选
+   1. 使用 chrome
+   1. 安装 chrome 插件 [web server](https://chrome.google.com/webstore/detail/web-server-for-chrome/ofhbbkphhbklhfoeikjpcbhemlocgigb)
+   1. 启动 webserver
+   1. 设置 `CHOOSE FOLDER` 为文件夹 `NeighborhoodMap_zh`
+   1. 设置 `Automatically show index.html` 勾选
 1. 查看页面
- 1. 点击 webserver 中的链接 (如http://127.0.1:8887) 即可浏览器中打开页面
+   1. 点击 webserver 中的链接 (如http://127.0.1:8887) 即可浏览器中打开页面
 
 # 应用描述
 本应用提供用户搜索感兴趣的地点, 如访问地点, 可添加访问记录. 如果对地点感兴趣可以添加入心愿单.

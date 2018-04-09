@@ -534,7 +534,8 @@ function updatePositions() {
   window.performance.mark("mark_start_frame");
 
   var items = document.querySelectorAll('.mover');
-  var x = document.body.scrollTop / 1250;
+  // var x = document.body.scrollTop / 1250; // https://stackoverflow.com/questions/43717316/google-chrome-document-body-scrolltop-always-returns-0
+  var x = window.scrollY / 1250;
   // 使用 transform 而不是修改 left 来改变位置
   // 根据计算表达式(i % 5), 每5个小 pizza 一个循环, 实际上只有五种唯一情况
   var transformArr = [];
